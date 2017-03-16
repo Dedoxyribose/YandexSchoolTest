@@ -23,7 +23,7 @@ public class TranslateFragment extends StandardFragment implements TranslateView
     }
 
 
-    public static TranslateFragment newInstance(String param1, String param2) {
+    public static TranslateFragment newInstance() {
         TranslateFragment fragment = new TranslateFragment();
 
         return fragment;

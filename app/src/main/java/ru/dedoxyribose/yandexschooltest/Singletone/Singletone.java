@@ -33,8 +33,7 @@ public class Singletone {
 
     }
 
-    public static void init(Context context)
-    {
+    public static void init(Context context) {
         if (sInstance==null)
         {
             sInstance=new Singletone(context);
@@ -44,8 +43,7 @@ public class Singletone {
         }
     }
 
-    public static Singletone getInstance()
-    {
+    public static Singletone getInstance() {
         return sInstance;
     }
 
@@ -63,16 +61,14 @@ public class Singletone {
     private static Database mDatabase;
 
 
-    public static void configureGreenDao(Context context)
-    {
+    public static void configureGreenDao(Context context) {
         DaoMaster.DevOpenHelper helper = new DaoMaster.DevOpenHelper(context, "green_db");
         mDatabase = helper.getWritableDb();
         mDaoMaster = new DaoMaster(mDatabase);
         mDaoSession = mDaoMaster.newSession();
     }
 
-    public static DaoSession getDaoSession()
-    {
+    public static DaoSession getDaoSession() {
         return mDaoSession;
     }
 
@@ -80,8 +76,7 @@ public class Singletone {
     //-------------------------Gson
 
 
-    public static void initGson()
-    {
+    public static void initGson() {
         sGson= new GsonBuilder()
                 .registerTypeAdapter(Word.class, new Word.WordConverter())
                 .registerTypeAdapter(Def.class, new Def.DefConverter())
@@ -91,8 +86,7 @@ public class Singletone {
                 .create();
     }
 
-    public static Gson getGson()
-    {
+    public static Gson getGson() {
         return sGson;
     }
 
