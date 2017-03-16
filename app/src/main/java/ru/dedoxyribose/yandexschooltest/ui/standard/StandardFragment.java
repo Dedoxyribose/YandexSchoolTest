@@ -1,6 +1,5 @@
 package ru.dedoxyribose.yandexschooltest.ui.standard;
 
-import android.app.Fragment;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -10,10 +9,7 @@ import android.view.ViewGroup;
 
 import com.arellomobile.mvp.MvpFragment;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import ru.dedoxyribose.yandexschooltest.Singletone.Singletone;
+import ru.dedoxyribose.yandexschooltest.util.Singletone;
 import ru.dedoxyribose.yandexschooltest.model.entity.DaoSession;
 
 /**

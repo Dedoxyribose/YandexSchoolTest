@@ -1,19 +1,11 @@
 package ru.dedoxyribose.yandexschooltest.ui.standard;
 
-import android.app.ActivityManager;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
-import android.view.View;
-import android.view.ViewGroup;
 
 import com.arellomobile.mvp.MvpAppCompatActivity;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import ru.dedoxyribose.yandexschooltest.Singletone.Singletone;
+import ru.dedoxyribose.yandexschooltest.util.Singletone;
 import ru.dedoxyribose.yandexschooltest.model.entity.DaoSession;
 
 /**

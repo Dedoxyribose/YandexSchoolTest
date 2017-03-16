@@ -22,6 +22,7 @@ public class Translation {
 
     private List<Word> syns = new ArrayList<>();
     private List<Word> means = new ArrayList<>();
+    private List<Example> examples = new ArrayList<>();
 
     public static class TranslationConverter implements JsonDeserializer<Translation>
     {
@@ -48,6 +49,11 @@ public class Translation {
             if (response.optJSONArray("mean")!=null) {
                 List<Word> means=context.deserialize(json.getAsJsonObject().get("mean").getAsJsonArray(), new TypeToken<List<Word>>(){}.getType());
                 translation.setMeans(means);
+            }
+
+            if (response.optJSONArray("ex")!=null) {
+                List<Example> exs=context.deserialize(json.getAsJsonObject().get("ex").getAsJsonArray(), new TypeToken<List<Example>>(){}.getType());
+                translation.setExamples(exs);
             }
 
             return translation;
@@ -77,5 +83,13 @@ public class Translation {
 
     public void setMeans(List<Word> means) {
         this.means = means;
+    }
+
+    public List<Example> getExamples() {
+        return examples;
+    }
+
+    public void setExamples(List<Example> examples) {
+        this.examples = examples;
     }
 }

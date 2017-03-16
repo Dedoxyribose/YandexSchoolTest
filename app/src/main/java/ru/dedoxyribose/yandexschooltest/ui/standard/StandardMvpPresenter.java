@@ -5,7 +5,7 @@ import android.content.res.Resources;
 
 import com.arellomobile.mvp.MvpPresenter;
 
-import ru.dedoxyribose.yandexschooltest.Singletone.Singletone;
+import ru.dedoxyribose.yandexschooltest.util.Singletone;
 import ru.dedoxyribose.yandexschooltest.model.entity.DaoSession;
 
 

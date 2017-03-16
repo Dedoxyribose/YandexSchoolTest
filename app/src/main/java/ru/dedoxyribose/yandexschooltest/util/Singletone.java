@@ -1,16 +1,11 @@
-package ru.dedoxyribose.yandexschooltest.Singletone;
+package ru.dedoxyribose.yandexschooltest.util;
 
-import android.app.Activity;
-import android.app.ActivityManager;
 import android.content.Context;
-import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import org.greenrobot.greendao.database.Database;
-
-import java.util.HashMap;
 
 import ru.dedoxyribose.yandexschooltest.model.entity.DaoMaster;
 import ru.dedoxyribose.yandexschooltest.model.entity.DaoSession;

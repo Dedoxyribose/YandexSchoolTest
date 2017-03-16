@@ -2,7 +2,7 @@ package ru.dedoxyribose.yandexschooltest;
 
 import android.app.Application;
 
-import ru.dedoxyribose.yandexschooltest.Singletone.Singletone;
+import ru.dedoxyribose.yandexschooltest.util.Singletone;
 
 /**
  * Created by Ryan on 16.03.2017.

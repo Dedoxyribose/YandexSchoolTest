@@ -5,4 +5,9 @@
     <color name="colorAccent">#FFDB4D</color>
     <color name="colorGrayPic">#777</color>
     <color name="colorBlackText">#111</color>
+    <color name="colorLightPink">#C282C2</color>
+    <color name="colorLightBlue">#5365AD</color>
+    <color name="colorLightViolet">#8D81D4</color>
+    <color name="colorBrown">#80492B</color>
+
 </resources>
