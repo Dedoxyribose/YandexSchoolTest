@@ -15,7 +15,7 @@ import java.lang.reflect.Type;
  */
 public class Word {
 
-    private String text, num, pos, gen;
+    private String text, num, pos, gen, ts;
 
     public static class WordConverter implements JsonDeserializer<Word>
     {
@@ -35,6 +35,7 @@ public class Word {
             word.setNum(response.optString("num"));
             word.setPos(response.optString("pos"));
             word.setText(response.optString("text"));
+            word.setTs(response.optString("ts"));
 
             return word;
         }
@@ -70,5 +71,13 @@ public class Word {
 
     public void setGen(String gen) {
         this.gen = gen;
+    }
+
+    public String getTs() {
+        return ts;
+    }
+
+    public void setTs(String ts) {
+        this.ts = ts;
     }
 }
