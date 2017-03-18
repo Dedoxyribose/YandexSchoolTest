@@ -3,7 +3,7 @@
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <EditText
+    <ru.dedoxyribose.yandexschooltest.widget.EditTextMultilineDone
         android:layout_width="match_parent"
         android:layout_height="130dp"
         android:inputType="textMultiLine"
@@ -13,12 +13,13 @@
         android:layout_marginLeft="7dp"
         android:layout_marginTop="7dp"
         android:layout_marginRight="7dp"
-        android:text="sadasdas sadasdas sadasdas sadasdas sadasdas  sadasdas sadasdas sadasdas sadasdas sadasdas sadasdas sadasdas sadasdas sadasdas sadasdas sadasdas sadasdas sadasdas sadasdas sadasdas"
+        android:text=""
         android:gravity="top"
         android:paddingLeft="10dp"
         android:paddingTop="10dp"
         android:paddingRight="30dp"
-        android:paddingBottom="30dp" />
+        android:paddingBottom="30dp"
+        android:imeOptions="actionDone"/>
 
     <LinearLayout
         android:orientation="vertical"
@@ -50,7 +51,8 @@
                 android:layout_width="21dp"
                 android:layout_height="21dp"
                 android:layout_centerInParent="true"
-                android:id="@+id/pbSpeak" />
+                android:id="@+id/pbSpeak"
+                android:visibility="invisible" />
 
             <ImageView
                 android:layout_width="24dp"
@@ -77,13 +79,14 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="Medium Text"
+        android:text=""
         android:id="@+id/tvMainText"
         android:layout_below="@+id/editText"
         android:layout_alignLeft="@+id/ivClear"
         android:layout_alignStart="@+id/ivClear"
         android:layout_marginTop="15dp"
-        android:textColor="@color/colorBlackText" />
+        android:textColor="@color/colorBlackText"
+        android:layout_marginRight="40dp" />
 
     <android.support.v7.widget.RecyclerView
         android:layout_width="match_parent"
@@ -93,6 +96,75 @@
         android:layout_marginLeft="10dp"
         android:layout_marginTop="10dp"
         android:layout_marginRight="35dp"></android.support.v7.widget.RecyclerView>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/editText"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginRight="35dp"
+        android:id="@+id/rlLoading"
+        android:background="#9FFF"
+        android:visibility="invisible">
+
+        <me.zhanghai.android.materialprogressbar.MaterialProgressBar
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_marginTop="15dp"
+            android:layout_centerHorizontal="true" />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/editText"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginRight="35dp"
+        android:id="@+id/rlError"
+        android:background="#9FFF"
+        android:visibility="invisible">
+
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="Medium Text"
+            android:id="@+id/tvErrorTitle"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="15dp"
+            android:textColor="@color/colorBlackText"
+            android:textStyle="bold"
+            android:layout_marginLeft="15dp"
+            android:layout_marginRight="15dp"
+            android:gravity="center_horizontal" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="Medium Text"
+            android:id="@+id/tvErrorText"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="5dp"
+            android:textColor="@color/colorBlackText"
+            android:layout_below="@+id/tvErrorTitle"
+            android:layout_marginLeft="15dp"
+            android:layout_marginRight="15dp"
+            android:gravity="center_horizontal" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/Repeat"
+            android:id="@+id/bRepeat"
+            android:layout_below="@+id/tvErrorText"
+            android:layout_marginTop="5dp"
+            android:layout_centerHorizontal="true" />
+    </RelativeLayout>
 
     <LinearLayout
         android:orientation="vertical"
@@ -112,14 +184,16 @@
                 android:layout_width="21dp"
                 android:layout_height="21dp"
                 android:layout_centerInParent="true"
-                android:id="@+id/pbSpeakTrsl" />
+                android:id="@+id/pbSpeakTrsl"
+                android:visibility="invisible" />
 
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:id="@+id/ivSpeakTrsl"
                 android:src="@drawable/ic_volume_up_black_24dp"
-                android:tint="@color/colorGrayPic" />
+                android:tint="@color/colorGrayPic"
+                android:visibility="visible" />
         </RelativeLayout>
 
         <ImageView

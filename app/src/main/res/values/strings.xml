@@ -3,4 +3,33 @@
     <string name="translation">translation</string>
     <string name="history">history</string>
     <string name="settings">settings</string>
+    <string name="noun">noun</string>
+    <string name="adjective">adj</string>
+    <string name="participle">participle</string>
+    <string name="verb">verb</string>
+    <string name="preposition">prep</string>
+    <string name="conjunction">conjunction</string>
+    <string name="interjection">interjection</string>
+    <string name="pronoun">pronoun</string>
+    <string name="adverb">adv</string>
+    <string name="particle">particle</string>
+    <string name="dict_key" translatable="false">dict.1.1.20170316T101625Z.9c8869c5e0c5e541.abb8f7fd5111c1c6e19ffed945601865a03a68dc</string>
+    <string name="trans_key" translatable="false">trnsl.1.1.20170316T115411Z.c5faf1706c905a38.813ea9a83054bdd7bfe243d1cab64ab4823ed02e</string>
+    <string name="Repeat">Repeat</string>
+    <string name="UnknownError">Unknown error</string>
+    <string name="ConnectionError">Network connection error</string>
+    <string name="CheckConnection">Check your network connection and try again</string>
+    <string name="Error">Error</string>
+    <string name="BadKey">Bad API key</string>
+    <string name="BlockedKey">Your API key is blocked</string>
+    <string name="TooManyReqs">Daily limit of requests exceeded</string>
+    <string name="TooBigText">Text is too big</string>
+    <string name="TextCantBeTranslated">This text cannot be translated</string>
+    <string name="DirectionNotSupported">Language direction not supported</string>
+    <string name="numeral">num</string>
+    <string name="LangOfText">Language of text</string>
+    <string name="LangOfTrsl">Language of translation</string>
+    <string name="DetermineLang">Determine the language</string>
+    <string name="RecentLangs">Recently used</string>
+    <string name="AllLangs">All languages</string>
 </resources>

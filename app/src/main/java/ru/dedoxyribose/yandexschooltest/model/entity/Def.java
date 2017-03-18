@@ -22,8 +22,7 @@ public class Def {
 
     private List<Translation> translations = new ArrayList<>();
 
-    public static class DefConverter implements JsonDeserializer<Def>
-    {
+    public static class DefConverter implements JsonDeserializer<Def> {
         @Override
         public Def deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
 

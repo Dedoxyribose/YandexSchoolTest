@@ -63,8 +63,7 @@ public class Record {
     public Record() {
     }
 
-    public static class RecordConverter implements JsonDeserializer<Record>
-    {
+    public static class RecordConverter implements JsonDeserializer<Record> {
         @Override
         public Record deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
 
@@ -84,7 +83,7 @@ public class Record {
                 List<Def> defs=new ArrayList<>();
 
                 for (int i=0; i<response.optJSONArray("def").length(); i++) {
-                    Def def=context.deserialize(json.getAsJsonObject().get("def").getAsJsonArray(), Def.class);
+                    Def def=context.deserialize(json.getAsJsonObject().get("def").getAsJsonArray().get(i), Def.class);
                     defs.add(def);
                 }
                 record.defs=defs;

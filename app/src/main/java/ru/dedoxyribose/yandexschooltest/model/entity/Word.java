@@ -17,8 +17,7 @@ public class Word {
 
     private String text, num, pos, gen, ts;
 
-    public static class WordConverter implements JsonDeserializer<Word>
-    {
+    public static class WordConverter implements JsonDeserializer<Word> {
         @Override
         public Word deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
 

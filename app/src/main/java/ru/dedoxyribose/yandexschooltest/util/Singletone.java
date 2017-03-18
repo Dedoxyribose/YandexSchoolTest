@@ -7,10 +7,13 @@ import com.google.gson.GsonBuilder;
 
 import org.greenrobot.greendao.database.Database;
 
+import java.util.List;
+
 import ru.dedoxyribose.yandexschooltest.model.entity.DaoMaster;
 import ru.dedoxyribose.yandexschooltest.model.entity.DaoSession;
 import ru.dedoxyribose.yandexschooltest.model.entity.Def;
 import ru.dedoxyribose.yandexschooltest.model.entity.Example;
+import ru.dedoxyribose.yandexschooltest.model.entity.Lang;
 import ru.dedoxyribose.yandexschooltest.model.entity.Record;
 import ru.dedoxyribose.yandexschooltest.model.entity.Translation;
 import ru.dedoxyribose.yandexschooltest.model.entity.Word;
@@ -23,6 +26,7 @@ public class Singletone {
     private static final String TAG = "Singletone";
     private static Singletone sInstance;
     private Context mContext;
+    private List<Lang> mLangs;
 
     private Singletone(Context context){
 
@@ -86,6 +90,13 @@ public class Singletone {
     }
 
 
+    //-------------------------Langs
 
+    public List<Lang> getLangs() {
+        return mLangs;
+    }
 
+    public void setLangs(List<Lang> langs) {
+        this.mLangs = langs;
+    }
 }

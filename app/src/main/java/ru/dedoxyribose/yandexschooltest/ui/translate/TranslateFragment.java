@@ -1,15 +1,26 @@
 package ru.dedoxyribose.yandexschooltest.ui.translate;
 
 import android.app.Activity;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.Editable;
+import android.text.Html;
+import android.text.TextWatcher;
+import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.arellomobile.mvp.presenter.InjectPresenter;
 
@@ -18,11 +29,14 @@ import java.util.List;
 
 import me.zhanghai.android.materialprogressbar.MaterialProgressBar;
 import ru.dedoxyribose.yandexschooltest.R;
-import ru.dedoxyribose.yandexschooltest.model.entity.Def;
+import ru.dedoxyribose.yandexschooltest.model.entity.Word;
 import ru.dedoxyribose.yandexschooltest.model.viewmodel.DefTitle;
 import ru.dedoxyribose.yandexschooltest.model.viewmodel.ExItem;
 import ru.dedoxyribose.yandexschooltest.model.viewmodel.ListItem;
+import ru.dedoxyribose.yandexschooltest.model.viewmodel.TrItem;
 import ru.dedoxyribose.yandexschooltest.ui.standard.StandardFragment;
+import ru.dedoxyribose.yandexschooltest.util.Utils;
+import ru.dedoxyribose.yandexschooltest.widget.EditTextMultilineDone;
 
 
 public class TranslateFragment extends StandardFragment implements TranslateView {
@@ -31,11 +45,13 @@ public class TranslateFragment extends StandardFragment implements TranslateView
     @InjectPresenter
     TranslatePresenter mPresenter;
 
-    private EditText mEtText;
+    private EditTextMultilineDone mEtText;
     private ImageView mIvMic, mIvSpeak, mIvSpeakTrsl, mIvFavorite, mIvShare, mIvBig, mIvClear;
-    private TextView mTvMainText;
+    private TextView mTvMainText, mTvErrorTitle, mTvErrorText;
+    private Button mbRepeat;
     private MaterialProgressBar mPbSpeak, mPbSpeakTrsl;
     private RecyclerView mRvList;
+    private RelativeLayout mRlLoading, mRlError;
 
     private DefListAdapter mrAdapter;
 
@@ -85,7 +101,7 @@ public class TranslateFragment extends StandardFragment implements TranslateView
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        mEtText=(EditText)view.findViewById(R.id.editText);
+        mEtText=(EditTextMultilineDone)view.findViewById(R.id.editText);
         mIvBig=(ImageView)view.findViewById(R.id.ivBig);
         mIvMic=(ImageView)view.findViewById(R.id.ivMic);
         mIvSpeak=(ImageView)view.findViewById(R.id.ivSpeak);
@@ -94,13 +110,63 @@ public class TranslateFragment extends StandardFragment implements TranslateView
         mIvShare=(ImageView)view.findViewById(R.id.ivShare);
         mIvClear=(ImageView)view.findViewById(R.id.ivClear);
         mTvMainText=(TextView)view.findViewById(R.id.tvMainText);
+        mTvErrorTitle=(TextView)view.findViewById(R.id.tvErrorTitle);
+        mTvErrorText=(TextView)view.findViewById(R.id.tvErrorText);
+        mbRepeat=(Button) view.findViewById(R.id.bRepeat);
         mPbSpeak=(MaterialProgressBar) view.findViewById(R.id.pbSpeak);
         mPbSpeakTrsl=(MaterialProgressBar)view.findViewById(R.id.pbSpeakTrsl);
         mRvList=(RecyclerView) view.findViewById(R.id.rvDefs);
+        mRlLoading=(RelativeLayout) view.findViewById(R.id.rlLoading);
+        mRlError=(RelativeLayout) view.findViewById(R.id.rlError);
 
         mrAdapter=new DefListAdapter();
         mRvList.setLayoutManager(new LinearLayoutManager(getActivity()));
         mRvList.setAdapter(mrAdapter);
+
+
+
+        mIvClear.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mPresenter.clearClicked();
+            }
+        });
+
+        mEtText.setOnEditorActionListener(new EditText.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    mPresenter.returnPressed();
+                    return true;
+                }
+                return false;
+            }
+        });
+
+        mEtText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                mPresenter.textChanged(charSequence);
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
+
+        mbRepeat.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mPresenter.repeatClicked();
+            }
+        });
 
     }
 
@@ -108,6 +174,30 @@ public class TranslateFragment extends StandardFragment implements TranslateView
     public void setDefData(List<ListItem> list) {
         mDefList=list;
         mrAdapter.notifyDataSetChanged();
+        Log.d(TAG, "list.size="+list.size());
+    }
+
+    @Override
+    public void setText(String text) {
+        mEtText.setText(text);
+    }
+
+    @Override
+    public void showLoading(boolean show) {
+        mRlLoading.setVisibility(show?View.VISIBLE:View.GONE);
+    }
+
+    @Override
+    public void setMainText(String text) {
+        mTvMainText.setText(text);
+    }
+
+    @Override
+    public void showError(boolean showError, String title, String text, boolean showRepeat) {
+        mRlError.setVisibility(showError?View.VISIBLE:View.GONE);
+        mbRepeat.setVisibility(showRepeat?View.VISIBLE:View.GONE);
+        mTvErrorTitle.setText(title);
+        mTvErrorText.setText(text);
     }
 
 
@@ -141,6 +231,12 @@ public class TranslateFragment extends StandardFragment implements TranslateView
         public void onBindViewHolder(final RecyclerView.ViewHolder viewHolder, int i) {
 
 
+            if (getItemViewType(i)==TYPE_DEF)
+                ((DefTitleViewHolder)viewHolder).setViews((DefTitle)mDefList.get(i));
+            else if (getItemViewType(i)==TYPE_TR)
+                ((TrItemViewHolder)viewHolder).setViews((TrItem) mDefList.get(i));
+            else ((ExItemViewHolder)viewHolder).setViews((ExItem) mDefList.get(i));
+
         }
 
         @Override
@@ -154,11 +250,38 @@ public class TranslateFragment extends StandardFragment implements TranslateView
             private TextView mTvWord;
             private TextView mTvInfo;
 
+            private String mColorBlack;
+            private String mColorGray;
+            private String mColorPink;
+
             public DefTitleViewHolder(View itemView) {
                 super(itemView);
 
+                mColorBlack="#"+Integer.toHexString(ContextCompat.getColor(getActivity(), R.color.colorBlackText)).substring(2);
+                mColorGray="#"+Integer.toHexString(ContextCompat.getColor(getActivity(), R.color.colorGrayText)).substring(2);
+                mColorPink="#"+Integer.toHexString(ContextCompat.getColor(getActivity(), R.color.colorLightPink)).substring(2);
+
                 mTvWord=(TextView)itemView.findViewById(R.id.tvWord);
                 mTvInfo=(TextView)itemView.findViewById(R.id.tvInfo);
+            }
+
+            public void setViews(DefTitle defTitle) {
+                mTvInfo.setText(defTitle.getWord().getPos());
+
+                String mainStr = Utils.getColoredSpanned(defTitle.getWord().getText(), mColorBlack);
+                if (defTitle.getWord().getTs()!=null) {
+                    mainStr += Utils.getColoredSpanned(" ["+defTitle.getWord().getTs()+"]", mColorGray);
+                }
+                if (defTitle.getWord().getGen()!=null) {
+                    mainStr += Utils.getColoredSpanned(" "+defTitle.getWord().getGen(), mColorGray);
+                }
+                Log.d(TAG, "mainStr="+mainStr);
+
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                    mTvWord.setText(Html.fromHtml(mainStr, Html.FROM_HTML_MODE_LEGACY), TextView.BufferType.SPANNABLE);
+                } else {
+                    mTvWord.setText(Html.fromHtml(mainStr), TextView.BufferType.SPANNABLE);
+                }
             }
         }
 
@@ -171,6 +294,10 @@ public class TranslateFragment extends StandardFragment implements TranslateView
 
                 mTvText=(TextView)itemView.findViewById(R.id.tvText);
             }
+
+            public void setViews(ExItem exItem) {
+                mTvText.setText(exItem.getText());
+            }
         }
 
         private class TrItemViewHolder extends RecyclerView.ViewHolder{
@@ -179,12 +306,49 @@ public class TranslateFragment extends StandardFragment implements TranslateView
             private TextView mTvWords;
             private TextView mTvMeans;
 
+            private String mColorBlack;
+            private String mColorGray;
+
             public TrItemViewHolder(View itemView) {
                 super(itemView);
+
+                mColorBlack="#"+Integer.toHexString(ContextCompat.getColor(getActivity(), R.color.colorBlackText)).substring(2);
+                mColorGray="#"+Integer.toHexString(ContextCompat.getColor(getActivity(), R.color.colorGrayText)).substring(2);
 
                 mTvNum=(TextView)itemView.findViewById(R.id.tvNum);
                 mTvWords=(TextView)itemView.findViewById(R.id.tvWords);
                 mTvMeans=(TextView)itemView.findViewById(R.id.tvMeans);
+            }
+
+            public void setViews(TrItem trItem) {
+                mTvNum.setText(trItem.getNum());
+
+                String wordsStr="";
+                for (Word word:trItem.getWords()){
+                    if (wordsStr.length()>0) wordsStr+=", ";
+                    wordsStr+=(" <font color=#"+mColorBlack+">"+word.getText()+"</font>");
+                    if (word.getGen()!=null) wordsStr += Utils.getColoredSpanned(" "+word.getGen(), mColorGray);
+                    if (word.getNum()!=null) wordsStr += Utils.getColoredSpanned(" "+word.getNum(), mColorGray);
+
+
+                }
+
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                    mTvWords.setText(Html.fromHtml(wordsStr, Html.FROM_HTML_MODE_LEGACY), TextView.BufferType.SPANNABLE);
+                } else {
+                    mTvWords.setText(Html.fromHtml(wordsStr), TextView.BufferType.SPANNABLE);
+                }
+
+                String meansStr="(";
+                for (Word word:trItem.getMeans()){
+                    if (meansStr.length()>1) meansStr+=", ";
+                    meansStr+=word.getText();
+                }
+                meansStr+=")";
+
+                mTvMeans.setText(meansStr);
+
+                if (trItem.getMeans().size()==0) mTvMeans.setVisibility(View.GONE); else mTvMeans.setVisibility(View.VISIBLE);
             }
         }
 

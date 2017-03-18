@@ -24,8 +24,7 @@ public class Translation {
     private List<Word> means = new ArrayList<>();
     private List<Example> examples = new ArrayList<>();
 
-    public static class TranslationConverter implements JsonDeserializer<Translation>
-    {
+    public static class TranslationConverter implements JsonDeserializer<Translation> {
         @Override
         public Translation deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
 

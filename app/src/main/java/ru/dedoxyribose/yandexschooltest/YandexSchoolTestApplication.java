@@ -2,6 +2,7 @@ package ru.dedoxyribose.yandexschooltest;
 
 import android.app.Application;
 
+import ru.dedoxyribose.yandexschooltest.util.RetrofitHelper;
 import ru.dedoxyribose.yandexschooltest.util.Singletone;
 
 /**
@@ -14,7 +15,8 @@ public class YandexSchoolTestApplication extends Application {
     public void onCreate() {
         super.onCreate();
 
-
         Singletone.init(getApplicationContext());
+        RetrofitHelper.init();
+
     }
 }

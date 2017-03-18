@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Yandex School Test</string>
+    <string name="history">история</string>
+    <string name="settings">настройки</string>
+    <string name="translation">перевод</string>
+    <string name="noun">сущ</string>
+    <string name="adjective">прил</string>
+    <string name="participle">прич</string>
+    <string name="verb">гл</string>
+    <string name="preposition">предлог</string>
+    <string name="conjunction">союз</string>
+    <string name="interjection">межд</string>
+    <string name="pronoun">мест</string>
+    <string name="adverb">нареч</string>
+    <string name="particle">част</string>
+    <string name="BadKey">Невалидный API ключ</string>
+    <string name="BlockedKey">API ключ заблокирован</string>
+    <string name="CheckConnection">Проверьте соединение с сетью и попробуйте снова</string>
+    <string name="ConnectionError">Ошибка подключения</string>
+    <string name="DirectionNotSupported">Направление перевода не поддерживается</string>
+    <string name="Error">Ошибка</string>
+    <string name="Repeat">Повторить</string>
+    <string name="TextCantBeTranslated">Текст не может быть переведён</string>
+    <string name="TooBigText">Текст слишком большой</string>
+    <string name="TooManyReqs">Превышен лимит запросов в сутки</string>
+    <string name="UnknownError">Неизвестная ошибка</string>
+    <string name="numeral">числ</string>
+</resources>

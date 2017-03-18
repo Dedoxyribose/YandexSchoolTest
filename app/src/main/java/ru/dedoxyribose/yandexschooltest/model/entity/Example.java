@@ -23,8 +23,7 @@ public class Example {
     private List<Word> translations = new ArrayList<>();
 
 
-    public static class ExampleConverter implements JsonDeserializer<Example>
-    {
+    public static class ExampleConverter implements JsonDeserializer<Example> {
         @Override
         public Example deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
 

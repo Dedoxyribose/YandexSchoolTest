@@ -3,13 +3,16 @@ package ru.dedoxyribose.yandexschooltest.ui.main;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.os.Bundle;
+import android.support.annotation.IdRes;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v7.view.menu.MenuView;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.ViewGroup;
 
 import com.arellomobile.mvp.presenter.InjectPresenter;
@@ -19,7 +22,7 @@ import ru.dedoxyribose.yandexschooltest.ui.standard.StandardActivity;
 import ru.dedoxyribose.yandexschooltest.ui.translate.TranslateFragment;
 import ru.dedoxyribose.yandexschooltest.widget.NonSwipeableViewPager;
 
-public class MainActivity extends StandardActivity {
+public class MainActivity extends StandardActivity implements MainView {
 
     @InjectPresenter
     MainPresenter mPresenter;
@@ -55,10 +58,37 @@ public class MainActivity extends StandardActivity {
                                 mViewPager.setCurrentItem(2);
                                 break;
                         }
-                        return false;
+                        return true;
                     }
                 });
 
+        try{
+            removeTextLabel(mBottomNavigationView, R.id.action_search);
+            removeTextLabel(mBottomNavigationView, R.id.action_history);
+            removeTextLabel(mBottomNavigationView, R.id.action_settings);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+    }
+
+    private static void removeTextLabel(@NonNull BottomNavigationView bottomNavigationView, @IdRes int menuItemId) {
+        View view = bottomNavigationView.findViewById(menuItemId);
+        if (view == null) return;
+        if (view instanceof MenuView.ItemView) {
+            ViewGroup viewGroup = (ViewGroup) view;
+            int padding = 0;
+            for (int i = 0; i < viewGroup.getChildCount(); i++) {
+                View v = viewGroup.getChildAt(i);
+                if (v instanceof ViewGroup) {
+                    padding = v.getHeight();
+                    viewGroup.removeViewAt(i);
+                }
+            }
+            viewGroup.setPadding(view.getPaddingLeft(), (viewGroup.getPaddingTop() + padding) / 2, view.getPaddingRight(), view.getPaddingBottom());
+        }
     }
 
 
