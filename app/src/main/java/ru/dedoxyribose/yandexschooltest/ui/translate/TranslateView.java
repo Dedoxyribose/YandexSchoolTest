@@ -36,6 +36,6 @@ public interface TranslateView extends MvpView {
     public void openChooseLang(Intent intent);
 
     @StateStrategyType(OneExecutionStateStrategy.class)
-    public void showLangs(String from, String to);
+    public void showLangs(String from, String to, boolean determined);
 
 }

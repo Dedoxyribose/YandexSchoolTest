@@ -1,6 +1,7 @@
 package ru.dedoxyribose.yandexschooltest.util;
 
 
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.http.Field;
@@ -28,5 +29,8 @@ public interface ServerApi {
     @FormUrlEncoded
     @POST(RetrofitHelper.TRANSLATE_URL+"getLangs")
     Call<SupportedLangs> getLangs(@Field("key") String key, @Field("ui") String ui);
+
+    @GET(RetrofitHelper.TRANSLATE_URL+"detect")
+    Call<ResponseBody> detect(@Query("key") String key, @Query("text") String text);
 
 }

@@ -26,4 +26,11 @@
     <string name="TooManyReqs">Превышен лимит запросов в сутки</string>
     <string name="UnknownError">Неизвестная ошибка</string>
     <string name="numeral">числ</string>
+    <string name="AllLangs">Все языки</string>
+    <string name="DetermineLang">Определить язык</string>
+    <string name="DeterminedAutomatically">(определен автоматически)</string>
+    <string name="LangOfText">Язык текста</string>
+    <string name="LangOfTrsl">Язык перевода</string>
+    <string name="RecentLangs">Недавно использованные</string>
+    <string name="UnableToDetermine">Не удалось определить</string>
 </resources>

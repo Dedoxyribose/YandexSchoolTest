@@ -12,9 +12,11 @@ import com.arellomobile.mvp.InjectViewState;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -74,7 +76,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
                             new Handler(Looper.getMainLooper()).post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    makeCall();
+                                    makeCall(false);
                                 }
                             });
                         }
@@ -87,7 +89,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
         mWaiter.start();
 
         mLangFrom=Utils.getLangByCode(Singletone.getInstance().getLastLangFrom(), Singletone.getInstance().getLangs());
-        mLangTo=Utils.getLangByCode(Singletone.getInstance().getLastLangFrom(), Singletone.getInstance().getLangs());
+        mLangTo=Utils.getLangByCode(Singletone.getInstance().getLastLangTo(), Singletone.getInstance().getLangs());
 
         if (mLangTo==null) {
             mLangTo=Singletone.getInstance().getLangs().get(0);
@@ -122,11 +124,15 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
     public void textChanged(CharSequence charSequence) {
 
+        Log.d(TAG, "textChanged()");
+
         mLastChangeTextTime=System.currentTimeMillis();
 
         mCurText=charSequence.toString();
 
         getViewState().showError(false, null, null, false);
+
+        showLangs();
     }
 
     public void returnPressed() {
@@ -134,22 +140,15 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
         Log.d(TAG, "returnPressed");
         if (mCurText.length()>0) {
 
-            makeCall();
+            makeFinalCall();
         }
     }
 
-    private void makeCall() {
+    private void doMakeCall(final boolean finalCall) {
 
-        mLastChangeTextTime=0;
+        Log.d(TAG, "doMakeCall()");
 
-        mRequestNum++;
         final int curReqNum=mRequestNum;
-
-        mGotDictionaryResponse=false;
-        mGotTranslationResponse=false;
-
-        getViewState().showLoading(true);
-        getViewState().showError(false, null, null, false);
 
         String direction=mLangFrom.getCode()+"-"+mLangTo.getCode();
 
@@ -158,13 +157,13 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
                 new Callback<Record>() {
                     @Override
                     public void onResponse(Call<Record> call, Response<Record> response) {
-                        gotResponse(curReqNum, true, response.isSuccessful(), Utils.extractErrorCode(response),
+                        gotResponse(curReqNum, finalCall,  true, response.isSuccessful(), Utils.extractErrorCode(response),
                                 response.isSuccessful()?response.body():null);
                     }
 
                     @Override
                     public void onFailure(Call<Record> call, Throwable t) {
-                        gotResponse(curReqNum, true, false, 0, null);
+                        gotResponse(curReqNum, finalCall, true, false, 0, null);
                         if (t!=null) t.printStackTrace();
                     }
                 });
@@ -174,20 +173,116 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
                 new Callback<Record>() {
                     @Override
                     public void onResponse(Call<Record> call, Response<Record> response) {
-                        gotResponse(curReqNum, false, response.isSuccessful(), Utils.extractErrorCode(response),
+                        gotResponse(curReqNum, finalCall, false, response.isSuccessful(), Utils.extractErrorCode(response),
                                 response.isSuccessful()?response.body():null);
                     }
 
                     @Override
                     public void onFailure(Call<Record> call, Throwable t) {
-                        gotResponse(curReqNum, false, false, 0, null);
+                        gotResponse(curReqNum, finalCall, false, false, 0, null);
                         if (t!=null) t.printStackTrace();
                     }
                 });
+
+    }
+
+    private void makeFinalCall() {
+
+        Log.d(TAG, "makeFinalCall()");
+
+        makeCall(true);
+
+    }
+
+    private void makeCall(final boolean finalCall) {
+
+        Log.d(TAG, "makeCall()");
+
+        mLastChangeTextTime=0;
+
+        mRequestNum++;
+
+        mGotDictionaryResponse=false;
+        mGotTranslationResponse=false;
+
+        getViewState().showLoading(true);
+        getViewState().showError(false, null, null, false);
+
+        final int curReqNum=mRequestNum;
+
+        if (!mWasDetermined) {
+            doMakeCall(finalCall);
+            showLangs();
+        }
+        else {
+
+            RetrofitHelper.getServerApi().detect(getContext().getString(R.string.trans_key), mCurText).enqueue(
+                    new Callback<ResponseBody>() {
+                        @Override
+                        public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+
+                            if (curReqNum!=mRequestNum) return;
+
+                            if (!response.isSuccessful()) {
+                                getViewState().showLoading(false);
+                                getViewState().showError(true, getContext().getString(R.string.Error),
+                                        Utils.getErrorTextForCode(getContext(), Utils.extractErrorCode(response)), true);
+                            }
+                            else {
+
+                                try {
+                                    JSONObject jsonObject = new JSONObject(response.body().string());
+                                    Log.d(TAG, jsonObject.toString());
+                                    if (jsonObject.optString("lang")!=null) {
+                                        String code=jsonObject.optString("lang");
+                                        mLangFrom=Utils.getLangByCode(code, Singletone.getInstance().getLangs());
+
+                                        if (mLangFrom==null) {
+                                            getViewState().showLangs(getContext().getString(R.string.UnableToDetermine),
+                                                    mLangTo.getName(), false);
+                                            getViewState().showLoading(false);
+                                            return;
+                                        }
+                                        showLangs();
+                                        doMakeCall(finalCall);
+                                    }
+                                    else onFailure(call, null);
+                                }
+                                catch (JSONException | IOException e) {
+                                    e.printStackTrace();
+                                    onFailure(call, null);
+                                }
+
+                            }
+
+                        }
+
+                        @Override
+                        public void onFailure(Call<ResponseBody> call, Throwable t) {
+
+                            if (curReqNum!=mRequestNum) return;
+
+                            if (t!=null) t.printStackTrace();
+
+                            getViewState().showLoading(false);
+                            if (t instanceof IOException) {
+                                getViewState().showError(true, getContext().getString(R.string.ConnectionError),
+                                        getContext().getString(R.string.CheckConnection), true);
+                            }
+                            else {
+                                getViewState().showError(true, getContext().getString(R.string.UnknownError),
+                                        null, true);
+                            }
+                        }
+                    }
+            );
+
+        }
+
     }
 
 
-    public void gotResponse(int reqNum, boolean dictionary, boolean successful, int errorCode, Record record) {
+    public void gotResponse(int reqNum, boolean finalCall, boolean dictionary, boolean successful, int errorCode, Record record) {
 
         Log.d(TAG, "gotResponse, successfull="+successful+" errorCode="+errorCode);
         if (reqNum!=mRequestNum) return;
@@ -240,6 +335,8 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
                     getViewState().setMainText(mCurRecord.getTranslation());
                 }
                 getViewState().setDefData(Utils.generateViewModelList(mCurRecord));
+
+                if (finalCall) mWasDetermined=false;
             }
         }
     }
@@ -248,8 +345,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
         Log.d(TAG, "repeatClicked");
         if (mCurText.length()>0) {
-
-            makeCall();
+            makeFinalCall();
         }
     }
 
@@ -268,34 +364,72 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
     }
 
     public void exchangeClicked() {
+
+        Log.d(TAG, "exchangeClicked()");
+
+        if (mLangFrom==null) return;
+
         Lang pl=mLangFrom;
         mLangFrom=mLangTo;
         mLangTo=pl;
+        mWasDetermined=false;
         showLangs();
+
+        Singletone.getInstance().setLastLangFrom(mLangFrom.getCode());
+        Singletone.getInstance().setLastLangTo(mLangTo.getCode());
+        Singletone.getInstance().saveSettings();
+
+        if (mCurText.length()>0 && mCurRecord!=null) {
+            mCurText=mCurRecord.getTranslation();
+            getViewState().setText(mCurText);
+            makeFinalCall();
+        }
     }
 
     private void showLangs() {
         String to=mLangTo.getName();
         String from=(mLangFrom==null)?getContext().getString(R.string.DetermineLang):mLangFrom.getName();
-        if (mLangFrom!=null && mWasDetermined) from+=("\n"+getContext().getString(R.string.DeterminedAutomatically));
-        getViewState().showLangs(from, to);
+        getViewState().showLangs(from, to, mWasDetermined && mLangFrom!=null);
     }
 
     public void activityResult(int requestCode, int resultCode, Intent data) {
 
         if (requestCode == TranslateFragment.REQ_CODE_GET_LANG && resultCode == Activity.RESULT_OK) {
+
             Lang newLang=Utils.getLangByCode(data.getStringExtra(ChooseLangActivity.RES_ARG_CHOSEN_LANG_CODE),
                     Singletone.getInstance().getLangs());
+
             if (data.getIntExtra(ChooseLangActivity.RES_ARG_CHOSEN_LANG_POS, 0)==ChooseLangActivity.LANG_POSITION_FROM) {
-                if (newLang!=null && newLang.getCode().equals(mLangTo.getCode())) mLangTo=mLangFrom;
+
+                if (mLangFrom!=null && mLangFrom.getCode().equals(mLangTo.getCode())) mLangTo=mLangFrom;
                 mLangFrom=newLang;
                 if (mLangFrom==null) mWasDetermined=true;
+                else {
+                    mWasDetermined=false;
+                    mLangFrom.setAskedTime(System.currentTimeMillis());
+                    getDaoSession().getLangDao().insertOrReplace(mLangFrom);
+                }
+
+                Singletone.getInstance().setLastLangFrom(data.getStringExtra(ChooseLangActivity.RES_ARG_CHOSEN_LANG_CODE));
+                Singletone.getInstance().saveSettings();
+
             }
             else {
-                if (newLang!=null && newLang.getCode().equals(mLangFrom.getCode())) mLangFrom=mLangTo;
+                if (mLangFrom!=null && mLangFrom.getCode().equals(mLangTo.getCode())) mLangFrom=mLangTo;
                 mLangTo=newLang;
+
+                if (mLangTo!=null) {
+                    mLangTo.setAskedTime(System.currentTimeMillis());
+                    getDaoSession().getLangDao().insertOrReplace(mLangTo);
+                }
+
+                Singletone.getInstance().setLastLangTo(data.getStringExtra(ChooseLangActivity.RES_ARG_CHOSEN_LANG_CODE));
+                Singletone.getInstance().saveSettings();
+
             }
             showLangs();
+
+            if (mCurText.length()>0) makeCall(false);
         }
 
     }

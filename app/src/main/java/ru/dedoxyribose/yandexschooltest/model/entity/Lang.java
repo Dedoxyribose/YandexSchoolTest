@@ -15,10 +15,11 @@ public class Lang {
 
     private long askedTime;
 
-    @Generated(hash = 2111248664)
-    public Lang(String code, String name) {
+    @Generated(hash = 311424896)
+    public Lang(String code, String name, long askedTime) {
         this.code = code;
         this.name = name;
+        this.askedTime = askedTime;
     }
 
     @Generated(hash = 1197397665)

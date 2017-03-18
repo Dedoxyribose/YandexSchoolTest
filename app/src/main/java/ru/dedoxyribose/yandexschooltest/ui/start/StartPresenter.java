@@ -5,6 +5,7 @@ import android.util.Log;
 
 import com.arellomobile.mvp.InjectViewState;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -49,6 +50,14 @@ public class StartPresenter extends StandardMvpPresenter<StartView>{
             refreshLangs();
         }
         else {
+
+            Collections.sort(langs, new Comparator<Lang>() {
+                @Override
+                public int compare(Lang lang, Lang t1) {
+                    return lang.getName().compareTo(t1.getName());
+                }
+            });
+
             Singletone.getInstance().setLangs(langs);
             getViewState().proceedToMain();
         }
@@ -89,7 +98,12 @@ public class StartPresenter extends StandardMvpPresenter<StartView>{
             @Override
             public void onFailure(Call<SupportedLangs> call, Throwable t) {
                 getViewState().showLoading(false);
-                getViewState().showError(true, getContext().getString(R.string.ConnectionError));
+
+                t.printStackTrace();
+
+                if (t instanceof IOException)
+                    getViewState().showError(true, getContext().getString(R.string.ConnectionError));
+                else getViewState().showError(true, getContext().getString(R.string.UnknownError));
             }
         });
 

@@ -33,4 +33,5 @@
     <string name="RecentLangs">Recently used</string>
     <string name="AllLangs">All languages</string>
     <string name="DeterminedAutomatically">(Determined automatically)</string>
+    <string name="UnableToDetermine">Unable to determine</string>
 </resources>

@@ -4,6 +4,7 @@ package ru.dedoxyribose.yandexschooltest.ui.chooselang;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Html;
 import android.util.Log;
@@ -47,6 +48,8 @@ public class ChooseLangActivity extends StandardActivity implements ChooseLangVi
     private boolean mShowDetermineLang=false;
     private int mCurLangPos=-1;
 
+    private RecyclerAdapter mrAdapter;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +68,10 @@ public class ChooseLangActivity extends StandardActivity implements ChooseLangVi
                 mPresenter.backClicked();
             }
         });
+
+        mrAdapter=new RecyclerAdapter();
+        mRvList.setAdapter(mrAdapter);
+        mRvList.setLayoutManager(new LinearLayoutManager(getActivity()));
 
     }
 
@@ -86,6 +93,7 @@ public class ChooseLangActivity extends StandardActivity implements ChooseLangVi
         mRecentLangs=recentLangs;
         mAllLangs=allLangs;
         mCurLangPos=curLangPos;
+        mrAdapter.notifyDataSetChanged();
     }
 
 

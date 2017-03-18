@@ -18,6 +18,7 @@ import ru.dedoxyribose.yandexschooltest.model.entity.Def;
 import ru.dedoxyribose.yandexschooltest.model.entity.Example;
 import ru.dedoxyribose.yandexschooltest.model.entity.Lang;
 import ru.dedoxyribose.yandexschooltest.model.entity.Record;
+import ru.dedoxyribose.yandexschooltest.model.entity.SupportedLangs;
 import ru.dedoxyribose.yandexschooltest.model.entity.Translation;
 import ru.dedoxyribose.yandexschooltest.model.entity.Word;
 
@@ -44,6 +45,7 @@ public class Singletone {
             sInstance.mContext=context.getApplicationContext();
             configureGreenDao(context);
             initGson();
+            sInstance.loadSettings();
         }
     }
 
@@ -87,6 +89,7 @@ public class Singletone {
                 .registerTypeAdapter(Example.class, new Example.ExampleConverter())
                 .registerTypeAdapter(Record.class, new Record.RecordConverter())
                 .registerTypeAdapter(Translation.class, new Translation.TranslationConverter())
+                .registerTypeAdapter(SupportedLangs.class, new SupportedLangs.SupportedLangsConverter())
                 .create();
     }
 
@@ -123,7 +126,6 @@ public class Singletone {
         ed.putString("lastLangTo", mLastLangTo);
         ed.commit();
     }
-
 
 
 

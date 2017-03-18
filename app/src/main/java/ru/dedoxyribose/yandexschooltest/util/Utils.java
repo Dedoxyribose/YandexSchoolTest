@@ -165,4 +165,10 @@ public class Utils {
         }
         return null;
     }
+
+    public static boolean isEmpty(String text){
+        if (text==null) return true;
+        if (text.length()==0) return true;
+        return false;
+    }
 }

@@ -49,7 +49,7 @@ public class TranslateFragment extends StandardFragment implements TranslateView
 
     private EditTextMultilineDone mEtText;
     private ImageView mIvMic, mIvSpeak, mIvSpeakTrsl, mIvFavorite, mIvShare, mIvBig, mIvClear, mIvExchange;
-    private TextView mTvMainText, mTvErrorTitle, mTvErrorText, mTvFrom, mTvTo;
+    private TextView mTvMainText, mTvErrorTitle, mTvErrorText, mTvFrom, mTvTo, mTvDetAut;
     private Button mbRepeat;
     private MaterialProgressBar mPbSpeak, mPbSpeakTrsl;
     private RecyclerView mRvList;
@@ -117,6 +117,7 @@ public class TranslateFragment extends StandardFragment implements TranslateView
         mTvErrorText=(TextView)view.findViewById(R.id.tvErrorText);
         mTvFrom=(TextView)view.findViewById(R.id.tvFrom);
         mTvTo=(TextView)view.findViewById(R.id.tvTo);
+        mTvDetAut=(TextView)view.findViewById(R.id.tvDetAut);
         mbRepeat=(Button) view.findViewById(R.id.bRepeat);
         mPbSpeak=(MaterialProgressBar) view.findViewById(R.id.pbSpeak);
         mPbSpeakTrsl=(MaterialProgressBar)view.findViewById(R.id.pbSpeakTrsl);
@@ -232,9 +233,11 @@ public class TranslateFragment extends StandardFragment implements TranslateView
     }
 
     @Override
-    public void showLangs(String from, String to) {
+    public void showLangs(String from, String to, boolean determined) {
         mTvFrom.setText(from);
         mTvTo.setText(to);
+
+        mTvDetAut.setVisibility(determined?View.VISIBLE:View.GONE);
     }
 
 
@@ -306,10 +309,10 @@ public class TranslateFragment extends StandardFragment implements TranslateView
                 mTvInfo.setText(defTitle.getWord().getPos());
 
                 String mainStr = Utils.getColoredSpanned(defTitle.getWord().getText(), mColorBlack);
-                if (defTitle.getWord().getTs()!=null) {
+                if (!Utils.isEmpty(defTitle.getWord().getTs())) {
                     mainStr += Utils.getColoredSpanned(" ["+defTitle.getWord().getTs()+"]", mColorGray);
                 }
-                if (defTitle.getWord().getGen()!=null) {
+                if (!Utils.isEmpty(defTitle.getWord().getGen())) {
                     mainStr += Utils.getColoredSpanned(" "+defTitle.getWord().getGen(), mColorGray);
                 }
                 Log.d(TAG, "mainStr="+mainStr);

@@ -55,7 +55,7 @@ public class ChooseLangPresenter extends StandardMvpPresenter<ChooseLangView>{
 
         for (int i=0; i<5; i++)
         {
-            //TODO вернуть if (sortedLangs.get(i).getAskedTime()>0)
+            if (sortedLangs.get(i).getAskedTime()>0)
                 recentLangs.add(sortedLangs.get(i));
         }
 
