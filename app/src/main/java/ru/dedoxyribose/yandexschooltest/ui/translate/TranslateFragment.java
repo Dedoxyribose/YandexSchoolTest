@@ -1,6 +1,7 @@
 package ru.dedoxyribose.yandexschooltest.ui.translate;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
@@ -41,13 +42,14 @@ import ru.dedoxyribose.yandexschooltest.widget.EditTextMultilineDone;
 
 public class TranslateFragment extends StandardFragment implements TranslateView {
 
+    public static final int REQ_CODE_GET_LANG=1;
 
     @InjectPresenter
     TranslatePresenter mPresenter;
 
     private EditTextMultilineDone mEtText;
-    private ImageView mIvMic, mIvSpeak, mIvSpeakTrsl, mIvFavorite, mIvShare, mIvBig, mIvClear;
-    private TextView mTvMainText, mTvErrorTitle, mTvErrorText;
+    private ImageView mIvMic, mIvSpeak, mIvSpeakTrsl, mIvFavorite, mIvShare, mIvBig, mIvClear, mIvExchange;
+    private TextView mTvMainText, mTvErrorTitle, mTvErrorText, mTvFrom, mTvTo;
     private Button mbRepeat;
     private MaterialProgressBar mPbSpeak, mPbSpeakTrsl;
     private RecyclerView mRvList;
@@ -109,9 +111,12 @@ public class TranslateFragment extends StandardFragment implements TranslateView
         mIvFavorite=(ImageView)view.findViewById(R.id.ivFavorite);
         mIvShare=(ImageView)view.findViewById(R.id.ivShare);
         mIvClear=(ImageView)view.findViewById(R.id.ivClear);
+        mIvExchange=(ImageView)view.findViewById(R.id.ivExchange);
         mTvMainText=(TextView)view.findViewById(R.id.tvMainText);
         mTvErrorTitle=(TextView)view.findViewById(R.id.tvErrorTitle);
         mTvErrorText=(TextView)view.findViewById(R.id.tvErrorText);
+        mTvFrom=(TextView)view.findViewById(R.id.tvFrom);
+        mTvTo=(TextView)view.findViewById(R.id.tvTo);
         mbRepeat=(Button) view.findViewById(R.id.bRepeat);
         mPbSpeak=(MaterialProgressBar) view.findViewById(R.id.pbSpeak);
         mPbSpeakTrsl=(MaterialProgressBar)view.findViewById(R.id.pbSpeakTrsl);
@@ -168,6 +173,27 @@ public class TranslateFragment extends StandardFragment implements TranslateView
             }
         });
 
+        mTvFrom.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mPresenter.fromClicked();
+            }
+        });
+
+        mTvTo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mPresenter.toClicked();
+            }
+        });
+
+        mIvExchange.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mPresenter.exchangeClicked();
+            }
+        });
+
     }
 
     @Override
@@ -198,6 +224,17 @@ public class TranslateFragment extends StandardFragment implements TranslateView
         mbRepeat.setVisibility(showRepeat?View.VISIBLE:View.GONE);
         mTvErrorTitle.setText(title);
         mTvErrorText.setText(text);
+    }
+
+    @Override
+    public void openChooseLang(Intent intent) {
+        startActivityForResult(intent, REQ_CODE_GET_LANG);
+    }
+
+    @Override
+    public void showLangs(String from, String to) {
+        mTvFrom.setText(from);
+        mTvTo.setText(to);
     }
 
 
@@ -355,5 +392,11 @@ public class TranslateFragment extends StandardFragment implements TranslateView
     }
 
 
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        mPresenter.activityResult(requestCode, resultCode, data);
+    }
 }
 

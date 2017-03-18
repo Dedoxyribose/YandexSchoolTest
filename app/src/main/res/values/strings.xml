@@ -32,4 +32,5 @@
     <string name="DetermineLang">Determine the language</string>
     <string name="RecentLangs">Recently used</string>
     <string name="AllLangs">All languages</string>
+    <string name="DeterminedAutomatically">(Determined automatically)</string>
 </resources>

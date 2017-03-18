@@ -78,6 +78,8 @@ public class ChooseLangPresenter extends StandardMvpPresenter<ChooseLangView>{
         String code=(lang==null)?"00":lang.getCode();
         Intent intent=new Intent();
         intent.putExtra(ChooseLangActivity.RES_ARG_CHOSEN_LANG_CODE, code);
+        intent.putExtra(ChooseLangActivity.RES_ARG_CHOSEN_LANG_POS,
+                mIsLangFrom?ChooseLangActivity.LANG_POSITION_FROM:ChooseLangActivity.LANG_POSITION_TO);
         getViewState().finishWithIntent(Activity.RESULT_OK, intent);
     }
 }

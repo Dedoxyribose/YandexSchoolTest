@@ -1,6 +1,8 @@
 package ru.dedoxyribose.yandexschooltest.ui.translate;
 
 
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -18,11 +20,14 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import ru.dedoxyribose.yandexschooltest.R;
 import ru.dedoxyribose.yandexschooltest.model.entity.Def;
+import ru.dedoxyribose.yandexschooltest.model.entity.Lang;
 import ru.dedoxyribose.yandexschooltest.model.entity.Record;
 import ru.dedoxyribose.yandexschooltest.model.viewmodel.ListItem;
+import ru.dedoxyribose.yandexschooltest.ui.chooselang.ChooseLangActivity;
 import ru.dedoxyribose.yandexschooltest.ui.standard.StandardMvpPresenter;
 import ru.dedoxyribose.yandexschooltest.util.RetrofitHelper;
 import ru.dedoxyribose.yandexschooltest.util.ServerApi;
+import ru.dedoxyribose.yandexschooltest.util.Singletone;
 import ru.dedoxyribose.yandexschooltest.util.Utils;
 
 /**
@@ -48,6 +53,10 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
     private long mLastChangeTextTime=0;
     private Thread mWaiter;
     private boolean mPresenterDestroyed=false;
+
+    private Lang mLangFrom;
+    private Lang mLangTo;
+    private boolean mWasDetermined=false;
 
     @Override
     protected void onFirstViewAttach() {
@@ -76,6 +85,19 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
             }
         });
         mWaiter.start();
+
+        mLangFrom=Utils.getLangByCode(Singletone.getInstance().getLastLangFrom(), Singletone.getInstance().getLangs());
+        mLangTo=Utils.getLangByCode(Singletone.getInstance().getLastLangFrom(), Singletone.getInstance().getLangs());
+
+        if (mLangTo==null) {
+            mLangTo=Singletone.getInstance().getLangs().get(0);
+        }
+
+        if (mLangFrom==null) mLangFrom=Utils.getLangByCode(mLangTo.getCode().equals("ru")?"en":"ru", Singletone.getInstance().getLangs());
+
+        //TODO обработать ошибку, если вообще почему-то нет языков, или мало и т.д.
+
+        showLangs();
 
     }
 
@@ -129,8 +151,10 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
         getViewState().showLoading(true);
         getViewState().showError(false, null, null, false);
 
+        String direction=mLangFrom.getCode()+"-"+mLangTo.getCode();
+
         RetrofitHelper.getServerApi().lookup(getContext().getString(R.string.dict_key),
-                "en-ru", mCurText, "ru").enqueue(
+                direction, mCurText, "ru").enqueue(
                 new Callback<Record>() {
                     @Override
                     public void onResponse(Call<Record> call, Response<Record> response) {
@@ -146,7 +170,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
                 });
 
         RetrofitHelper.getServerApi().translate(getContext().getString(R.string.trans_key),
-                "en-ru", mCurText).enqueue(
+                direction, mCurText).enqueue(
                 new Callback<Record>() {
                     @Override
                     public void onResponse(Call<Record> call, Response<Record> response) {
@@ -227,5 +251,52 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
             makeCall();
         }
+    }
+
+    public void fromClicked() {
+        Intent intent=new Intent(getContext(), ChooseLangActivity.class);
+        intent.putExtra(ChooseLangActivity.ARG_LANG_POSITION, ChooseLangActivity.LANG_POSITION_FROM);
+        intent.putExtra(ChooseLangActivity.ARG_CUR_LANG, mLangFrom==null?"00":mLangFrom.getCode());
+        getViewState().openChooseLang(intent);
+    }
+
+    public void toClicked() {
+        Intent intent=new Intent(getContext(), ChooseLangActivity.class);
+        intent.putExtra(ChooseLangActivity.ARG_LANG_POSITION, ChooseLangActivity.LANG_POSITION_TO);
+        intent.putExtra(ChooseLangActivity.ARG_CUR_LANG, mLangTo.getCode());
+        getViewState().openChooseLang(intent);
+    }
+
+    public void exchangeClicked() {
+        Lang pl=mLangFrom;
+        mLangFrom=mLangTo;
+        mLangTo=pl;
+        showLangs();
+    }
+
+    private void showLangs() {
+        String to=mLangTo.getName();
+        String from=(mLangFrom==null)?getContext().getString(R.string.DetermineLang):mLangFrom.getName();
+        if (mLangFrom!=null && mWasDetermined) from+=("\n"+getContext().getString(R.string.DeterminedAutomatically));
+        getViewState().showLangs(from, to);
+    }
+
+    public void activityResult(int requestCode, int resultCode, Intent data) {
+
+        if (requestCode == TranslateFragment.REQ_CODE_GET_LANG && resultCode == Activity.RESULT_OK) {
+            Lang newLang=Utils.getLangByCode(data.getStringExtra(ChooseLangActivity.RES_ARG_CHOSEN_LANG_CODE),
+                    Singletone.getInstance().getLangs());
+            if (data.getIntExtra(ChooseLangActivity.RES_ARG_CHOSEN_LANG_POS, 0)==ChooseLangActivity.LANG_POSITION_FROM) {
+                if (newLang!=null && newLang.getCode().equals(mLangTo.getCode())) mLangTo=mLangFrom;
+                mLangFrom=newLang;
+                if (mLangFrom==null) mWasDetermined=true;
+            }
+            else {
+                if (newLang!=null && newLang.getCode().equals(mLangFrom.getCode())) mLangFrom=mLangTo;
+                mLangTo=newLang;
+            }
+            showLangs();
+        }
+
     }
 }

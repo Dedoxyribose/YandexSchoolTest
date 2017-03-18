@@ -30,6 +30,7 @@ public class ChooseLangActivity extends StandardActivity implements ChooseLangVi
     public static final String ARG_CUR_LANG="ARG_CUR_LANG";
 
     public static final String RES_ARG_CHOSEN_LANG_CODE="RES_ARG_CHOSEN_LANG_CODE";
+    public static final String RES_ARG_CHOSEN_LANG_POS="RES_ARG_CHOSEN_LANG_POS";
 
     public static final int LANG_POSITION_FROM=0;
     public static final int LANG_POSITION_TO=1;

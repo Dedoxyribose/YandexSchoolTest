@@ -1,5 +1,7 @@
 package ru.dedoxyribose.yandexschooltest.ui.translate;
 
+import android.content.Intent;
+
 import com.arellomobile.mvp.MvpView;
 import com.arellomobile.mvp.viewstate.strategy.AddToEndSingleStrategy;
 import com.arellomobile.mvp.viewstate.strategy.OneExecutionStateStrategy;
@@ -29,5 +31,11 @@ public interface TranslateView extends MvpView {
 
     @StateStrategyType(AddToEndSingleStrategy.class)
     public void showError(boolean showError, String title, String text, boolean showRepeat);
+
+    @StateStrategyType(OneExecutionStateStrategy.class)
+    public void openChooseLang(Intent intent);
+
+    @StateStrategyType(OneExecutionStateStrategy.class)
+    public void showLangs(String from, String to);
 
 }

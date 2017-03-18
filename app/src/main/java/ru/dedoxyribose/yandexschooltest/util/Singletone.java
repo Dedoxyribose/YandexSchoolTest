@@ -1,6 +1,9 @@
 package ru.dedoxyribose.yandexschooltest.util;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -27,6 +30,8 @@ public class Singletone {
     private static Singletone sInstance;
     private Context mContext;
     private List<Lang> mLangs;
+    private String mLastLangFrom;
+    private String mLastLangTo;
 
     private Singletone(Context context){
 
@@ -98,5 +103,50 @@ public class Singletone {
 
     public void setLangs(List<Lang> langs) {
         this.mLangs = langs;
+    }
+
+    //-------------------------Settings
+
+    public void loadSettings() {
+        Log.d(TAG, "loadSettings");
+        SharedPreferences sPref = mContext.getSharedPreferences("settings", Activity.MODE_PRIVATE);
+        mLastLangFrom = sPref.getString("lastLangFrom", "ru");
+        mLastLangTo = sPref.getString("lastLangTo", "en");
+    }
+
+    public void saveSettings() {
+        Log.d(TAG, "saveSettings");
+
+        SharedPreferences sPref = mContext.getSharedPreferences("settings", Activity.MODE_PRIVATE);
+        SharedPreferences.Editor ed = sPref.edit();
+        ed.putString("lastLangFrom", mLastLangFrom);
+        ed.putString("lastLangTo", mLastLangTo);
+        ed.commit();
+    }
+
+
+
+
+
+
+
+
+    //--------------
+
+
+    public String getLastLangFrom() {
+        return mLastLangFrom;
+    }
+
+    public String getLastLangTo() {
+        return mLastLangTo;
+    }
+
+    public void setLastLangFrom(String lastLangFrom) {
+        this.mLastLangFrom = lastLangFrom;
+    }
+
+    public void setLastLangTo(String lastLangTo) {
+        this.mLastLangTo = lastLangTo;
     }
 }
