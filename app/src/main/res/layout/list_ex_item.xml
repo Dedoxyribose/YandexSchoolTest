@@ -9,12 +9,12 @@
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:text="стекло - glass"
         android:id="@+id/tvText"
-        android:layout_marginTop="5dp"
+        android:layout_marginTop="4dp"
         android:textColor="@color/colorLightViolet"
-        android:textSize="15sp"
+        android:textSize="18sp"
         android:layout_marginLeft="25dp"
         android:textStyle="italic"
-        android:layout_marginBottom="5dp"
+        android:layout_marginBottom="1dp"
         android:layout_marginRight="5dp" />
 
 </LinearLayout>

@@ -10,7 +10,7 @@
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:id="@+id/tvBorder"
         android:layout_below="@+id/tvName"
-        android:background="@color/colorGrayText" />
+        android:background="#DDD" />
 
     <TextView
         android:layout_width="wrap_content"

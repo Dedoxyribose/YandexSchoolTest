@@ -11,7 +11,8 @@
         android:id="@+id/tvWord"
         android:layout_marginTop="5dp"
         android:textColor="@color/colorBlackText"
-        android:layout_marginRight="5dp" />
+        android:layout_marginRight="5dp"
+        android:textSize="20sp" />
 
     <TextView
         android:layout_width="wrap_content"

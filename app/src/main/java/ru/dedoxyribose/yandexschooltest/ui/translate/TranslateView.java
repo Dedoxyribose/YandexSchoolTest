@@ -38,4 +38,10 @@ public interface TranslateView extends MvpView {
     @StateStrategyType(OneExecutionStateStrategy.class)
     public void showLangs(String from, String to, boolean determined);
 
+    @StateStrategyType(OneExecutionStateStrategy.class)
+    public void hideSoftKeyboard();
+
+    @StateStrategyType(OneExecutionStateStrategy.class)
+    public void clearTextFocus();
+
 }

@@ -186,11 +186,11 @@ public class ChooseLangActivity extends StandardActivity implements ChooseLangVi
                 else mTvName.setText(getString(R.string.DetermineLang));
 
                 if (selected){
-                    mRlContent.setBackgroundColor(ContextCompat.getColor(getActivity(), R.color.colorLightGray));
+                    mRlContent.setBackgroundResource(R.drawable.lang_item_back_selected);
                     mIvChecked.setVisibility(View.VISIBLE);
                 }
                 else{
-                    mRlContent.setBackgroundColor(ContextCompat.getColor(getActivity(), android.R.color.white));
+                    mRlContent.setBackgroundResource(R.drawable.lang_item_back);
                     mIvChecked.setVisibility(View.GONE);
                 }
 

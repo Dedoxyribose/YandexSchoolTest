@@ -143,4 +143,11 @@ public class MainActivity extends StandardActivity implements MainView {
 
 
     }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+
+        Log.d("aa", "onBackPressed");
+    }
 }

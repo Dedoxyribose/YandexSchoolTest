@@ -3,7 +3,10 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:id="@+id/rlContainer">
 
     <android.support.design.widget.AppBarLayout
         android:id="@+id/appbar"
@@ -36,7 +39,9 @@
                     android:layout_centerVertical="true"
                     android:gravity="center_vertical"
                     android:paddingRight="5dp"
-                    android:paddingLeft="5dp" >
+                    android:paddingLeft="5dp"
+                    android:background="@drawable/lang_title_back"
+                    android:id="@+id/llFrom">
 
                     <TextView
                         android:id="@+id/tvFrom"
@@ -81,7 +86,8 @@
                     android:src="@drawable/double_arrow"
                     android:visibility="visible"
                     android:layout_centerInParent="true"
-                    android:padding="8dp" />
+                    android:padding="8dp"
+                    android:background="@drawable/lang_title_back" />
 
                 <TextView
                     android:id="@+id/tvTo"
@@ -99,7 +105,8 @@
                     android:paddingLeft="5dp"
                     android:paddingRight="5dp"
                     android:ellipsize="end"
-                    android:singleLine="true" />
+                    android:singleLine="true"
+                    android:background="@drawable/lang_title_back" />
 
             </RelativeLayout>
 
@@ -191,14 +198,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text=""
             android:id="@+id/tvMainText"
             android:layout_below="@+id/editText"
             android:layout_alignLeft="@+id/ivClear"
             android:layout_alignStart="@+id/ivClear"
             android:layout_marginTop="15dp"
             android:textColor="@color/colorBlackText"
-            android:layout_marginRight="40dp" />
+            android:layout_marginRight="40dp"
+            android:textSize="20sp" />
 
         <android.support.v7.widget.RecyclerView
             android:layout_width="match_parent"

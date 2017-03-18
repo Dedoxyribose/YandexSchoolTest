@@ -9,16 +9,25 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.Html;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.TextPaint;
 import android.text.TextWatcher;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -53,7 +62,9 @@ public class TranslateFragment extends StandardFragment implements TranslateView
     private Button mbRepeat;
     private MaterialProgressBar mPbSpeak, mPbSpeakTrsl;
     private RecyclerView mRvList;
-    private RelativeLayout mRlLoading, mRlError;
+    private RelativeLayout mRlLoading, mRlError, mRlContainer
+            ;
+    private LinearLayout mLlFrom;
 
     private DefListAdapter mrAdapter;
 
@@ -124,6 +135,8 @@ public class TranslateFragment extends StandardFragment implements TranslateView
         mRvList=(RecyclerView) view.findViewById(R.id.rvDefs);
         mRlLoading=(RelativeLayout) view.findViewById(R.id.rlLoading);
         mRlError=(RelativeLayout) view.findViewById(R.id.rlError);
+        mRlContainer=(RelativeLayout) view.findViewById(R.id.rlContainer);
+        mLlFrom=(LinearLayout) view.findViewById(R.id.llFrom);
 
         mrAdapter=new DefListAdapter();
         mRvList.setLayoutManager(new LinearLayoutManager(getActivity()));
@@ -174,7 +187,7 @@ public class TranslateFragment extends StandardFragment implements TranslateView
             }
         });
 
-        mTvFrom.setOnClickListener(new View.OnClickListener() {
+        mLlFrom.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 mPresenter.fromClicked();
@@ -195,6 +208,43 @@ public class TranslateFragment extends StandardFragment implements TranslateView
             }
         });
 
+        mRlContainer.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                mPresenter.outsideTouch();
+                return false;
+            }
+        });
+
+        /*mRvList.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                mPresenter.outsideTouch();
+                return false;
+            }
+        });
+
+        mEtText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View view, boolean b) {
+                if (!b) mPresenter.textLostFocus();
+            }
+        });*/
+
+    }
+
+    @Override
+    public void hideSoftKeyboard() {
+        InputMethodManager inputMethodManager =
+                (InputMethodManager) getActivity().getSystemService(
+                        Activity.INPUT_METHOD_SERVICE);
+        inputMethodManager.hideSoftInputFromWindow(
+                getActivity().getCurrentFocus().getWindowToken(), 0);
+    }
+
+    @Override
+    public void clearTextFocus() {
+        mEtText.clearFocus();
     }
 
     @Override
@@ -315,7 +365,6 @@ public class TranslateFragment extends StandardFragment implements TranslateView
                 if (!Utils.isEmpty(defTitle.getWord().getGen())) {
                     mainStr += Utils.getColoredSpanned(" "+defTitle.getWord().getGen(), mColorGray);
                 }
-                Log.d(TAG, "mainStr="+mainStr);
 
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
                     mTvWord.setText(Html.fromHtml(mainStr, Html.FROM_HTML_MODE_LEGACY), TextView.BufferType.SPANNABLE);
@@ -363,21 +412,50 @@ public class TranslateFragment extends StandardFragment implements TranslateView
             public void setViews(TrItem trItem) {
                 mTvNum.setText(trItem.getNum());
 
-                String wordsStr="";
+                SpannableStringBuilder spannableStringBuilder=new SpannableStringBuilder();
                 for (Word word:trItem.getWords()){
-                    if (wordsStr.length()>0) wordsStr+=", ";
-                    wordsStr+=(" <font color=#"+mColorBlack+">"+word.getText()+"</font>");
+
+                    if (spannableStringBuilder.length()>0) spannableStringBuilder.append(", ");
+
+                    int oldLen=spannableStringBuilder.length();
+                    spannableStringBuilder.append(word.getText());
+                    final String finalWord = word.getText();
+                    spannableStringBuilder.setSpan(new ClickableSpan() {
+                        @Override
+                        public void onClick(View view) {
+                            Log.d(TAG, "spanClicked(), word="+ finalWord);
+                            mPresenter.synonymClicked(finalWord);
+                        }
+
+                        @Override
+                        public void updateDrawState(TextPaint ds) {
+                            ds.setUnderlineText(false);
+                            ds.setColor(ContextCompat.getColor(getActivity(), R.color.colorLightBlue));
+                        }
+                    }, oldLen, spannableStringBuilder.length(), Spannable.SPAN_INTERMEDIATE);
+
+                    String wordsStr="";
+
                     if (word.getGen()!=null) wordsStr += Utils.getColoredSpanned(" "+word.getGen(), mColorGray);
                     if (word.getNum()!=null) wordsStr += Utils.getColoredSpanned(" "+word.getNum(), mColorGray);
 
+                    Spanned spanned;
+
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                        spanned=Html.fromHtml(wordsStr, Html.FROM_HTML_MODE_LEGACY);
+                    } else {
+                        spanned=Html.fromHtml(wordsStr);
+                    }
+
+                    if (spanned.length()>0) spannableStringBuilder.append(" ");
+                    spannableStringBuilder.append(spanned);
+
 
                 }
 
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-                    mTvWords.setText(Html.fromHtml(wordsStr, Html.FROM_HTML_MODE_LEGACY), TextView.BufferType.SPANNABLE);
-                } else {
-                    mTvWords.setText(Html.fromHtml(wordsStr), TextView.BufferType.SPANNABLE);
-                }
+                mTvWords.setText(spannableStringBuilder, TextView.BufferType.SPANNABLE);
+                mTvWords.setMovementMethod(LinkMovementMethod.getInstance());
+
 
                 String meansStr="(";
                 for (Word word:trItem.getMeans()){

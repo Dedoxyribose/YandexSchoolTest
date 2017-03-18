@@ -141,6 +141,8 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
         if (mCurText.length()>0) {
 
             makeFinalCall();
+            getViewState().hideSoftKeyboard();
+            getViewState().clearTextFocus();
         }
     }
 
@@ -401,7 +403,8 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
             if (data.getIntExtra(ChooseLangActivity.RES_ARG_CHOSEN_LANG_POS, 0)==ChooseLangActivity.LANG_POSITION_FROM) {
 
-                if (mLangFrom!=null && mLangFrom.getCode().equals(mLangTo.getCode())) mLangTo=mLangFrom;
+                if (newLang!=null && newLang.getCode().equals(mLangTo.getCode())) mLangTo=mLangFrom;
+
                 mLangFrom=newLang;
                 if (mLangFrom==null) mWasDetermined=true;
                 else {
@@ -410,12 +413,16 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
                     getDaoSession().getLangDao().insertOrReplace(mLangFrom);
                 }
 
+                if (mLangTo==null) {
+                    getDefaultLangTo();
+                }
+
                 Singletone.getInstance().setLastLangFrom(data.getStringExtra(ChooseLangActivity.RES_ARG_CHOSEN_LANG_CODE));
                 Singletone.getInstance().saveSettings();
 
             }
             else {
-                if (mLangFrom!=null && mLangFrom.getCode().equals(mLangTo.getCode())) mLangFrom=mLangTo;
+                if (newLang!=null && mLangFrom!=null && newLang.getCode().equals(mLangFrom.getCode())) mLangFrom=mLangTo;
                 mLangTo=newLang;
 
                 if (mLangTo!=null) {
@@ -432,5 +439,36 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
             if (mCurText.length()>0) makeCall(false);
         }
 
+    }
+
+    private void getDefaultLangTo() {
+
+        if (mLangFrom==null) mLangTo=Utils.getLangByCode("ru", Singletone.getInstance().getLangs());
+        else {
+            if (mLangFrom.getCode().equals("ru"))  mLangTo=Utils.getLangByCode("en", Singletone.getInstance().getLangs());
+            else mLangTo=Utils.getLangByCode("ru", Singletone.getInstance().getLangs());
+        }
+
+        if (mLangTo==null) mLangTo=Singletone.getInstance().getLangs().get(0);
+        if (mLangFrom==mLangTo) mLangTo=Singletone.getInstance().getLangs().get(1);
+
+        //TODO handle errors
+    }
+
+    public void outsideTouch() {
+        getViewState().hideSoftKeyboard();
+        getViewState().clearTextFocus();
+    }
+
+    public void textLostFocus() {
+        makeFinalCall();
+    }
+
+    public void synonymClicked(String word) {
+
+        exchangeClicked();
+        mCurText=word;
+        getViewState().setText(mCurText);
+        makeFinalCall();
     }
 }
