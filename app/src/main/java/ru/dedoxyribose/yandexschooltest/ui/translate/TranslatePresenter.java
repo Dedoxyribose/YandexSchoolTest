@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.arellomobile.mvp.InjectViewState;
 
@@ -31,6 +32,12 @@ import ru.dedoxyribose.yandexschooltest.util.RetrofitHelper;
 import ru.dedoxyribose.yandexschooltest.util.ServerApi;
 import ru.dedoxyribose.yandexschooltest.util.Singletone;
 import ru.dedoxyribose.yandexschooltest.util.Utils;
+import ru.yandex.speechkit.Error;
+import ru.yandex.speechkit.Recognizer;
+import ru.yandex.speechkit.Synthesis;
+import ru.yandex.speechkit.Vocalizer;
+import ru.yandex.speechkit.VocalizerListener;
+import ru.yandex.speechkit.gui.RecognizerActivity;
 
 /**
  * Created by Ryan on 27.02.2017.
@@ -59,6 +66,9 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
     private Lang mLangFrom;
     private Lang mLangTo;
     private boolean mWasDetermined=false;
+
+    private boolean mTextSpeechProgress=false;
+    private boolean mTranslateSpeechProgress=false;
 
     @Override
     protected void onFirstViewAttach() {
@@ -381,9 +391,8 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
         Singletone.getInstance().setLastLangTo(mLangTo.getCode());
         Singletone.getInstance().saveSettings();
 
-        if (mCurText.length()>0 && mCurRecord!=null) {
-            mCurText=mCurRecord.getTranslation();
-            getViewState().setText(mCurText);
+        if (mCurText.length()>0 && mCurRecord!=null && mCurRecord.getTranslation()!=null) {
+            setCurText(mCurRecord.getTranslation());
             makeFinalCall();
         }
     }
@@ -392,6 +401,11 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
         String to=mLangTo.getName();
         String from=(mLangFrom==null)?getContext().getString(R.string.DetermineLang):mLangFrom.getName();
         getViewState().showLangs(from, to, mWasDetermined && mLangFrom!=null);
+
+        getViewState().setRecognitionEnabled(mLangFrom!=null && Utils.getSpeechCodeForLang(mLangFrom.getCode())!=null);
+        getViewState().setTextSpeechStatus(mLangFrom!=null && Utils.getSpeechCodeForLang(mLangFrom.getCode())!=null, mTextSpeechProgress);
+        getViewState().setTranslateSpeechStatus(mCurRecord!=null && mCurRecord.getDirection()!=null &&
+                Utils.getSpeechCodeForLang(mCurRecord.getDirection().substring(3))!=null, mTextSpeechProgress);
     }
 
     public void activityResult(int requestCode, int resultCode, Intent data) {
@@ -438,6 +452,11 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
             if (mCurText.length()>0) makeCall(false);
         }
+        else if (requestCode == TranslateFragment.REQUEST_CODE_RECOGNIZE && resultCode == Activity.RESULT_OK) {
+            final String result = data.getStringExtra(RecognizerActivity.EXTRA_RESULT);
+            setCurText(result);
+            makeFinalCall();
+        }
 
     }
 
@@ -467,8 +486,109 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
     public void synonymClicked(String word) {
 
         exchangeClicked();
-        mCurText=word;
-        getViewState().setText(mCurText);
+        setCurText(word);
         makeFinalCall();
     }
+
+    public void micClicked() {
+
+        if (mLangFrom!=null && Utils.getSpeechCodeForLang(mLangFrom.getCode())!=null) {
+
+            Intent intent = new Intent(getContext(), RecognizerActivity.class);
+            intent.putExtra(RecognizerActivity.EXTRA_MODEL, Recognizer.Model.NOTES);
+            intent.putExtra(RecognizerActivity.EXTRA_LANGUAGE, Utils.getSpeechCodeForLang(mLangFrom.getCode()));
+            intent.putExtra(RecognizerActivity.EXTRA_SHOW_PARTIAL_RESULTS, true);
+
+            getViewState().startRecognition(intent);
+        }
+
+    }
+
+    public void speakClicked() {
+
+        if (mLangFrom!=null && Utils.getSpeechCodeForLang(mLangFrom.getCode())!=null) {
+            mTextSpeechProgress=true;
+            Vocalizer vocalizer=Vocalizer.createVocalizer(Utils.getSpeechCodeForLang(mLangFrom.getCode()), mCurText, true);
+            vocalizer.setListener(new VocalizerListener() {
+                @Override
+                public void onSynthesisBegin(Vocalizer vocalizer) {
+
+                }
+
+                @Override
+                public void onSynthesisDone(Vocalizer vocalizer, Synthesis synthesis) {
+
+                }
+
+                @Override
+                public void onPlayingBegin(Vocalizer vocalizer) {
+
+                }
+
+                @Override
+                public void onPlayingDone(Vocalizer vocalizer) {
+                    mTextSpeechProgress=false;
+                    showLangs();
+                }
+
+                @Override
+                public void onVocalizerError(Vocalizer vocalizer, Error error) {
+                    mTextSpeechProgress=false;
+                    showLangs();
+                    Toast.makeText(getContext(), getContext().getString(R.string.UnableToSynthesizeSpeech), Toast.LENGTH_SHORT).show();
+                }
+            });
+            vocalizer.start();
+
+            showLangs();
+        }
+    }
+
+    public void speakTrslClicked() {
+
+        if (mCurRecord!=null && mCurRecord.getTranslation()!=null && mCurRecord.getDirection()!=null &&
+                Utils.getSpeechCodeForLang(mCurRecord.getDirection().substring(3))!=null) {
+            mTranslateSpeechProgress=true;
+            Vocalizer vocalizer=Vocalizer.createVocalizer(
+                    Utils.getSpeechCodeForLang(mCurRecord.getDirection().substring(3)), mCurRecord.getTranslation(), true);
+            vocalizer.setListener(new VocalizerListener() {
+                @Override
+                public void onSynthesisBegin(Vocalizer vocalizer) {
+
+                }
+
+                @Override
+                public void onSynthesisDone(Vocalizer vocalizer, Synthesis synthesis) {
+
+                }
+
+                @Override
+                public void onPlayingBegin(Vocalizer vocalizer) {
+
+                }
+
+                @Override
+                public void onPlayingDone(Vocalizer vocalizer) {
+                    mTranslateSpeechProgress=false;
+                    showLangs();
+                }
+
+                @Override
+                public void onVocalizerError(Vocalizer vocalizer, Error error) {
+                    mTranslateSpeechProgress=false;
+                    showLangs();
+                    Toast.makeText(getContext(), getContext().getString(R.string.UnableToSynthesizeSpeech), Toast.LENGTH_SHORT).show();
+                }
+            });
+            vocalizer.start();
+
+            showLangs();
+        }
+    }
+
+    private void setCurText(String text) {
+        mCurText=text;
+        getViewState().setText(text);
+    }
+
 }

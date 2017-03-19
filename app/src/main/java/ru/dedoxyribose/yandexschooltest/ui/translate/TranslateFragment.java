@@ -47,11 +47,13 @@ import ru.dedoxyribose.yandexschooltest.model.viewmodel.TrItem;
 import ru.dedoxyribose.yandexschooltest.ui.standard.StandardFragment;
 import ru.dedoxyribose.yandexschooltest.util.Utils;
 import ru.dedoxyribose.yandexschooltest.widget.EditTextMultilineDone;
+import ru.yandex.speechkit.Recognizer;
 
 
 public class TranslateFragment extends StandardFragment implements TranslateView {
 
     public static final int REQ_CODE_GET_LANG=1;
+    public static final int REQUEST_CODE_RECOGNIZE = 2;
 
     @InjectPresenter
     TranslatePresenter mPresenter;
@@ -231,6 +233,27 @@ public class TranslateFragment extends StandardFragment implements TranslateView
             }
         });*/
 
+        mIvMic.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mPresenter.micClicked();
+            }
+        });
+
+        mIvSpeak.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mPresenter.speakClicked();
+            }
+        });
+
+        mIvSpeakTrsl.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mPresenter.speakTrslClicked();
+            }
+        });
+
     }
 
     @Override
@@ -245,6 +268,35 @@ public class TranslateFragment extends StandardFragment implements TranslateView
     @Override
     public void clearTextFocus() {
         mEtText.clearFocus();
+    }
+
+    @Override
+    public void setRecognitionEnabled(boolean enabled) {
+        mIvMic.setImageResource(enabled?R.drawable.ic_mic_black_24dp:R.drawable.ic_mic_off_black_24dp);
+        mIvMic.setColorFilter(ContextCompat.getColor(getActivity(), enabled?R.color.colorGrayPic:R.color.colorLightGray));
+    }
+
+    @Override
+    public void startRecognition(Intent intent) {
+        startActivityForResult(intent, REQUEST_CODE_RECOGNIZE);
+    }
+
+    @Override
+    public void setTextSpeechStatus(boolean enabled, boolean loading) {
+        mIvSpeak.setImageResource(enabled?R.drawable.ic_volume_up_black_24dp:R.drawable.ic_volume_off_black_24dp);
+        mIvSpeak.setColorFilter(ContextCompat.getColor(getActivity(), enabled?R.color.colorGrayPic:R.color.colorLightGray));
+
+        mIvSpeak.setVisibility(loading?View.GONE:View.VISIBLE);
+        mPbSpeak.setVisibility(loading?View.VISIBLE:View.GONE);
+    }
+
+    @Override
+    public void setTranslateSpeechStatus(boolean enabled, boolean loading) {
+        mIvSpeakTrsl.setImageResource(enabled?R.drawable.ic_volume_up_black_24dp:R.drawable.ic_volume_off_black_24dp);
+        mIvSpeakTrsl.setColorFilter(ContextCompat.getColor(getActivity(), enabled?R.color.colorGrayPic:R.color.colorLightGray));
+
+        mIvSpeakTrsl.setVisibility(loading?View.GONE:View.VISIBLE);
+        mPbSpeakTrsl.setVisibility(loading?View.VISIBLE:View.GONE);
     }
 
     @Override

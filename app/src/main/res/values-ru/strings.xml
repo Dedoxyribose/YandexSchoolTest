@@ -33,4 +33,5 @@
     <string name="LangOfTrsl">Язык перевода</string>
     <string name="RecentLangs">Недавно использованные</string>
     <string name="UnableToDetermine">Не удалось определить</string>
+    <string name="UnableToSynthesizeSpeech">Не удалось синтезировать речь</string>
 </resources>

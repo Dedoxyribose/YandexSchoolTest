@@ -31,6 +31,15 @@ import ru.dedoxyribose.yandexschooltest.model.viewmodel.TrItem;
  */
 public class Utils {
 
+    public static String [] speakableLangs = {
+            "ru", "en", "ua", "tr"
+    };
+
+    public static String [] speakableLangsCodes = {
+            "en-EN", "ru-RU", "tr-TR", "uk-UA"
+    };
+
+
     public static Record deserializeRecord(boolean dict, JSONObject jsonObject, String initialText, String direction) {
         Record record = new Record();
 
@@ -170,5 +179,13 @@ public class Utils {
         if (text==null) return true;
         if (text.length()==0) return true;
         return false;
+    }
+
+    public static String getSpeechCodeForLang(String code) {
+        for (int i=0; i<speakableLangs.length; i++) {
+            if (speakableLangs[i].equals(code))
+                return speakableLangsCodes[i];
+        }
+        return null;
     }
 }

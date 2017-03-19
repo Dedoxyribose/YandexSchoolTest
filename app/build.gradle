@@ -46,4 +46,5 @@ dependencies {
     compile 'me.zhanghai.android.materialprogressbar:library:1.3.0'
     compile "com.google.code.gson:gson:$gson_version"
     compile "org.greenrobot:greendao:$greendao_version"
+    compile 'com.yandex.android:speechkit:2.5.0'
 }
