@@ -30,9 +30,9 @@
                 android:layout_gravity="center">
 
                 <LinearLayout
+                    android:layout_height="50dp"
                     android:orientation="vertical"
                     android:layout_width="wrap_content"
-                    android:layout_height="50dp"
                     android:layout_gravity="center_horizontal"
                     android:layout_marginRight="7dp"
                     android:layout_toLeftOf="@+id/ivExchange"
@@ -138,7 +138,8 @@
             android:paddingTop="10dp"
             android:paddingRight="30dp"
             android:paddingBottom="30dp"
-            android:imeOptions="actionDone"/>
+            android:imeOptions="actionDone"
+            android:maxLength="9999" />
 
         <LinearLayout
             android:orientation="vertical"
@@ -153,12 +154,12 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp">
 
-                <ImageView
+                <ru.dedoxyribose.yandexschooltest.widget.TintableImageView
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:id="@+id/ivMic"
                     android:src="@drawable/ic_mic_black_24dp"
-                    android:tint="@color/colorGrayPic" />
+                    app:tint="@color/tint_selectable" />
             </RelativeLayout>
 
             <RelativeLayout
@@ -173,12 +174,12 @@
                     android:id="@+id/pbSpeak"
                     android:visibility="invisible" />
 
-                <ImageView
+                <ru.dedoxyribose.yandexschooltest.widget.TintableImageView
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:id="@+id/ivSpeak"
                     android:src="@drawable/ic_volume_up_black_24dp"
-                    android:tint="@color/colorGrayPic" />
+                    app:tint="@color/tint_selectable" />
             </RelativeLayout>
         </LinearLayout>
 
@@ -194,27 +195,38 @@
             android:src="@drawable/ic_clear_black_24dp"
             android:tint="#333" />
 
-        <TextView
-            android:layout_width="wrap_content"
+        <ScrollView
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:id="@+id/tvMainText"
+            android:id="@+id/scrollView2"
             android:layout_below="@+id/editText"
             android:layout_alignLeft="@+id/ivClear"
-            android:layout_alignStart="@+id/ivClear"
-            android:layout_marginTop="15dp"
-            android:textColor="@color/colorBlackText"
-            android:layout_marginRight="40dp"
-            android:textSize="20sp" />
+            android:layout_marginRight="50dp"
+            android:layout_marginBottom="15dp"
+            android:layout_marginTop="15dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:id="@+id/tvMainText"
+                android:layout_below="@+id/editText"
+                android:layout_alignLeft="@+id/ivClear"
+                android:layout_alignStart="@+id/ivClear"
+                android:textColor="@color/colorBlackText"
+                android:layout_marginRight="40dp"
+                android:textSize="20sp"
+                android:text="" />
+        </ScrollView>
 
         <android.support.v7.widget.RecyclerView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:id="@+id/rvDefs"
-            android:layout_below="@+id/tvMainText"
+            android:layout_below="@+id/scrollView2"
             android:layout_marginLeft="10dp"
-            android:layout_marginTop="10dp"
-            android:layout_marginRight="35dp"></android.support.v7.widget.RecyclerView>
+            android:layout_marginRight="35dp"
+            android:layout_marginTop="-5dp"></android.support.v7.widget.RecyclerView>
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -306,37 +318,40 @@
                     android:id="@+id/pbSpeakTrsl"
                     android:visibility="invisible" />
 
-                <ImageView
+                <ru.dedoxyribose.yandexschooltest.widget.TintableImageView
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:id="@+id/ivSpeakTrsl"
                     android:src="@drawable/ic_volume_up_black_24dp"
-                    android:tint="@color/colorGrayPic"
+                    app:tint="@color/tint_selectable"
                     android:visibility="visible" />
             </RelativeLayout>
 
             <ImageView
+                android:enabled="false"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:id="@+id/ivFavorite"
                 android:layout_marginTop="15dp"
-                android:tint="@color/colorGrayPic"
+                android:tint="@color/colorLightGray"
                 android:src="@drawable/ic_bookmark_black_24dp" />
 
-            <ImageView
+            <ru.dedoxyribose.yandexschooltest.widget.TintableImageView
+                android:enabled="false"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:id="@+id/ivShare"
                 android:layout_marginTop="15dp"
-                android:tint="@color/colorGrayPic"
+                app:tint="@color/tint_selectable"
                 android:src="@drawable/ic_share_black_24dp" />
 
-            <ImageView
+            <ru.dedoxyribose.yandexschooltest.widget.TintableImageView
+                android:enabled="false"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:id="@+id/ivBig"
                 android:layout_marginTop="15dp"
-                android:tint="@color/colorGrayPic"
+                app:tint="@color/tint_selectable"
                 android:src="@drawable/ic_fullscreen_black_24dp" />
 
         </LinearLayout>

@@ -56,4 +56,19 @@ public interface TranslateView extends MvpView {
     @StateStrategyType(AddToEndSingleStrategy.class)
     public void setTranslateSpeechStatus(boolean enabled, boolean loading);
 
+    @StateStrategyType(OneExecutionStateStrategy.class)
+    public void startFullscreen(Intent intent);
+
+    @StateStrategyType(OneExecutionStateStrategy.class)
+    public void showToast(String text);
+
+    @StateStrategyType(OneExecutionStateStrategy.class)
+    public void share(String text);
+
+    @StateStrategyType(AddToEndSingleStrategy.class)
+    public void setTranslationButtonsEnabled(boolean enabled);
+
+    @StateStrategyType(AddToEndSingleStrategy.class)
+    public void setFavoriteOn(boolean on);
+
 }

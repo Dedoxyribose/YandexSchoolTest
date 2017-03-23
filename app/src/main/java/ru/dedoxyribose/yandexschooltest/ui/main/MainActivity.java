@@ -18,6 +18,7 @@ import android.view.ViewGroup;
 import com.arellomobile.mvp.presenter.InjectPresenter;
 
 import ru.dedoxyribose.yandexschooltest.R;
+import ru.dedoxyribose.yandexschooltest.ui.histories.HistoriesFragment;
 import ru.dedoxyribose.yandexschooltest.ui.standard.StandardActivity;
 import ru.dedoxyribose.yandexschooltest.ui.translate.TranslateFragment;
 import ru.dedoxyribose.yandexschooltest.widget.NonSwipeableViewPager;
@@ -72,6 +73,27 @@ public class MainActivity extends StandardActivity implements MainView {
             e.printStackTrace();
         }
 
+        mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+                if (position!=1) {
+                    if (mSectionPagerAdapter.getRegisteredFragment(1)!=null) {
+                        ((HistoriesFragment)mSectionPagerAdapter.getRegisteredFragment(1)).focusLost();
+                    }
+                }
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+
+            }
+        });
+
     }
 
     private static void removeTextLabel(@NonNull BottomNavigationView bottomNavigationView, @IdRes int menuItemId) {
@@ -107,7 +129,7 @@ public class MainActivity extends StandardActivity implements MainView {
                 case 0:
                     return TranslateFragment.newInstance();
                 case 1:
-                    return TranslateFragment.newInstance();
+                    return HistoriesFragment.newInstance();
                 default:
                     return TranslateFragment.newInstance();
             }
@@ -141,6 +163,9 @@ public class MainActivity extends StandardActivity implements MainView {
             return null;
         }
 
+        public Fragment getRegisteredFragment(int i) {
+            return registeredFragments.get(i);
+        }
 
     }
 

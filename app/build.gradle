@@ -7,7 +7,7 @@ android {
 
     defaultConfig {
         applicationId "ru.dedoxyribose.yandexschooltest"
-        minSdkVersion 16
+        minSdkVersion 17
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
@@ -47,4 +47,8 @@ dependencies {
     compile "com.google.code.gson:gson:$gson_version"
     compile "org.greenrobot:greendao:$greendao_version"
     compile 'com.yandex.android:speechkit:2.5.0'
+    compile 'me.grantland:autofittextview:0.2.+'
+    compile 'com.github.AndroidDeveloperLB:AutoFitTextView:4'
+    compile 'org.greenrobot:eventbus:3.0.0'
+    testCompile 'junit:junit:4.12'
 }

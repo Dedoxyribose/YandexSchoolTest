@@ -34,4 +34,5 @@
     <string name="RecentLangs">Недавно использованные</string>
     <string name="UnableToDetermine">Не удалось определить</string>
     <string name="UnableToSynthesizeSpeech">Не удалось синтезировать речь</string>
+    <string name="TranslationCopied">Перевод скопирован</string>
 </resources>

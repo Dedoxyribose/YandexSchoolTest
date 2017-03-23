@@ -25,6 +25,8 @@
 
         <activity android:name=".ui.chooselang.ChooseLangActivity"/>
 
+        <activity android:name=".ui.fullscreen.FullscreenActivity"/>
+
     </application>
 
 </manifest>

@@ -36,4 +36,7 @@
     <string name="UnableToDetermine">Unable to determine</string>
     <string name="sdk_key" translatable="false">6c24ffb1-7ba3-4170-bb61-24b2b9083229</string>
     <string name="UnableToSynthesizeSpeech">Unable to synthesize speech</string>
+    <string name="TranslationCopied">Translation was copied to clipboard</string>
+    <string name="History">History</string>
+    <string name="Favorite">Favorite</string>
 </resources>

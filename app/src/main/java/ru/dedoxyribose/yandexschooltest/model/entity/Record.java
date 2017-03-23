@@ -28,10 +28,10 @@ public class Record {
     public static final int TYPE_WORD=0;
     public static final int TYPE_SENTENSE=1;
 
-    @Id
-    long id;
-
     int type;
+
+    @Id
+    String id;
 
     String text, translation;
     String lowText, lowTranslation;
@@ -42,14 +42,28 @@ public class Record {
 
     long requestTime;
 
+    boolean inHistory;
+    boolean inFavorite;
+
+    long historyTime;
+    long favoriteTime;
+
     @Transient
     List<Def> defs;
 
-    @Generated(hash = 918183919)
-    public Record(long id, int type, String text, String translation, String lowText, String lowTranslation, String direction,
-            String jsonDefStr, long requestTime) {
-        this.id = id;
+   
+
+    @Generated(hash = 477726293)
+    public Record() {
+    }
+
+
+
+    @Generated(hash = 1886451163)
+    public Record(int type, String id, String text, String translation, String lowText, String lowTranslation, String direction,
+            String jsonDefStr, long requestTime, boolean inHistory, boolean inFavorite, long historyTime, long favoriteTime) {
         this.type = type;
+        this.id = id;
         this.text = text;
         this.translation = translation;
         this.lowText = lowText;
@@ -57,10 +71,16 @@ public class Record {
         this.direction = direction;
         this.jsonDefStr = jsonDefStr;
         this.requestTime = requestTime;
+        this.inHistory = inHistory;
+        this.inFavorite = inFavorite;
+        this.historyTime = historyTime;
+        this.favoriteTime = favoriteTime;
     }
 
-    @Generated(hash = 477726293)
-    public Record() {
+    public Record copy() {
+        Record record = new Record(type, id, text, translation, lowText, lowTranslation, direction, jsonDefStr,
+                requestTime, inHistory, inFavorite, historyTime, favoriteTime);
+        return record;
     }
 
     public static class RecordConverter implements JsonDeserializer<Record> {
@@ -113,6 +133,9 @@ public class Record {
                 }
             }
 
+
+            record.generateId();
+
             return record;
         }
     }
@@ -138,9 +161,7 @@ public class Record {
         }
     }
 
-    public long getId() {
-        return id;
-    }
+
 
     public int getType() {
         return type;
@@ -184,6 +205,7 @@ public class Record {
 
     public void setDirection(String direction) {
         this.direction = direction;
+        generateId();
     }
 
     public void setText(String text) {
@@ -191,8 +213,8 @@ public class Record {
         this.lowText=text.toLowerCase();
     }
 
-    public void setId(long id) {
-        this.id = id;
+    public void generateId() {
+        id=getDirection()+getTranslation();
     }
 
     public void setType(int type) {
@@ -201,6 +223,7 @@ public class Record {
 
     public void setTranslation(String translation) {
         this.translation = translation;
+        generateId();
     }
 
     public void setLowText(String lowText) {
@@ -213,5 +236,55 @@ public class Record {
 
     public void setJsonDefStr(String jsonDefStr) {
         this.jsonDefStr = jsonDefStr;
+    }
+
+    public boolean isInHistory() {
+        return inHistory;
+    }
+
+    public boolean isInFavorite() {
+        return inFavorite;
+    }
+
+    public long getHistoryTime() {
+        return historyTime;
+    }
+
+    public long getFavoriteTime() {
+        return favoriteTime;
+    }
+
+    public void setInHistory(boolean inHistory) {
+        this.inHistory = inHistory;
+    }
+
+    public void setInFavorite(boolean inFavorite) {
+        this.inFavorite = inFavorite;
+    }
+
+    public void setHistoryTime(long historyTime) {
+        this.historyTime = historyTime;
+    }
+
+    public void setFavoriteTime(long favoriteTime) {
+        this.favoriteTime = favoriteTime;
+    }
+
+    public boolean getInHistory() {
+        return this.inHistory;
+    }
+
+    public boolean getInFavorite() {
+        return this.inFavorite;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+
+
+    public void setId(String id) {
+        this.id = id;
     }
 }

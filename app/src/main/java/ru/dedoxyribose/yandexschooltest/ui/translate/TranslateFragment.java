@@ -2,6 +2,7 @@ package ru.dedoxyribose.yandexschooltest.ui.translate;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
@@ -47,6 +48,7 @@ import ru.dedoxyribose.yandexschooltest.model.viewmodel.TrItem;
 import ru.dedoxyribose.yandexschooltest.ui.standard.StandardFragment;
 import ru.dedoxyribose.yandexschooltest.util.Utils;
 import ru.dedoxyribose.yandexschooltest.widget.EditTextMultilineDone;
+import ru.dedoxyribose.yandexschooltest.widget.TintableImageView;
 import ru.yandex.speechkit.Recognizer;
 
 
@@ -59,19 +61,22 @@ public class TranslateFragment extends StandardFragment implements TranslateView
     TranslatePresenter mPresenter;
 
     private EditTextMultilineDone mEtText;
-    private ImageView mIvMic, mIvSpeak, mIvSpeakTrsl, mIvFavorite, mIvShare, mIvBig, mIvClear, mIvExchange;
+    private TintableImageView mIvMic, mIvSpeak, mIvSpeakTrsl, mIvShare, mIvBig;
+    private ImageView mIvClear, mIvExchange, mIvFavorite;
     private TextView mTvMainText, mTvErrorTitle, mTvErrorText, mTvFrom, mTvTo, mTvDetAut;
     private Button mbRepeat;
     private MaterialProgressBar mPbSpeak, mPbSpeakTrsl;
     private RecyclerView mRvList;
-    private RelativeLayout mRlLoading, mRlError, mRlContainer
-            ;
+    private RelativeLayout mRlLoading, mRlError, mRlContainer;
     private LinearLayout mLlFrom;
 
     private DefListAdapter mrAdapter;
 
 
     private List<ListItem> mDefList = new ArrayList<>();
+
+    private boolean mIsFavorite=false;
+    private boolean mAreButtonsEnabled=false;
 
     public TranslateFragment() {
         // Required empty public constructor
@@ -117,12 +122,12 @@ public class TranslateFragment extends StandardFragment implements TranslateView
         super.onViewCreated(view, savedInstanceState);
 
         mEtText=(EditTextMultilineDone)view.findViewById(R.id.editText);
-        mIvBig=(ImageView)view.findViewById(R.id.ivBig);
-        mIvMic=(ImageView)view.findViewById(R.id.ivMic);
-        mIvSpeak=(ImageView)view.findViewById(R.id.ivSpeak);
-        mIvSpeakTrsl=(ImageView)view.findViewById(R.id.ivSpeakTrsl);
-        mIvFavorite=(ImageView)view.findViewById(R.id.ivFavorite);
-        mIvShare=(ImageView)view.findViewById(R.id.ivShare);
+        mIvBig=(TintableImageView) view.findViewById(R.id.ivBig);
+        mIvMic=(TintableImageView)view.findViewById(R.id.ivMic);
+        mIvSpeak=(TintableImageView)view.findViewById(R.id.ivSpeak);
+        mIvSpeakTrsl=(TintableImageView)view.findViewById(R.id.ivSpeakTrsl);
+        mIvFavorite=(ImageView) view.findViewById(R.id.ivFavorite);
+        mIvShare=(TintableImageView)view.findViewById(R.id.ivShare);
         mIvClear=(ImageView)view.findViewById(R.id.ivClear);
         mIvExchange=(ImageView)view.findViewById(R.id.ivExchange);
         mTvMainText=(TextView)view.findViewById(R.id.tvMainText);
@@ -143,7 +148,6 @@ public class TranslateFragment extends StandardFragment implements TranslateView
         mrAdapter=new DefListAdapter();
         mRvList.setLayoutManager(new LinearLayoutManager(getActivity()));
         mRvList.setAdapter(mrAdapter);
-
 
 
         mIvClear.setOnClickListener(new View.OnClickListener() {
@@ -218,6 +222,14 @@ public class TranslateFragment extends StandardFragment implements TranslateView
             }
         });
 
+        mRvList.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                mPresenter.outsideTouch();
+                return false;
+            }
+        });
+
         /*mRvList.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
@@ -232,6 +244,13 @@ public class TranslateFragment extends StandardFragment implements TranslateView
                 if (!b) mPresenter.textLostFocus();
             }
         });*/
+
+        mEtText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View view, boolean b) {
+                if (!b) mPresenter.textLostFocus();
+            }
+        });
 
         mIvMic.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -254,6 +273,34 @@ public class TranslateFragment extends StandardFragment implements TranslateView
             }
         });
 
+        mIvBig.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mPresenter.bigClicked();
+            }
+        });
+
+        mTvMainText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mPresenter.mainTextClicked();
+            }
+        });
+
+        mIvShare.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mPresenter.shareClicked();
+            }
+        });
+
+        mIvFavorite.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mPresenter.favoriteClicked();
+            }
+        });
+
     }
 
     @Override
@@ -273,7 +320,7 @@ public class TranslateFragment extends StandardFragment implements TranslateView
     @Override
     public void setRecognitionEnabled(boolean enabled) {
         mIvMic.setImageResource(enabled?R.drawable.ic_mic_black_24dp:R.drawable.ic_mic_off_black_24dp);
-        mIvMic.setColorFilter(ContextCompat.getColor(getActivity(), enabled?R.color.colorGrayPic:R.color.colorLightGray));
+        mIvMic.setEnabled(enabled);
     }
 
     @Override
@@ -283,8 +330,8 @@ public class TranslateFragment extends StandardFragment implements TranslateView
 
     @Override
     public void setTextSpeechStatus(boolean enabled, boolean loading) {
-        mIvSpeak.setImageResource(enabled?R.drawable.ic_volume_up_black_24dp:R.drawable.ic_volume_off_black_24dp);
-        mIvSpeak.setColorFilter(ContextCompat.getColor(getActivity(), enabled?R.color.colorGrayPic:R.color.colorLightGray));
+        mIvSpeak.setImageResource(enabled?R.drawable.ic_volume_up_black_24dp:R.drawable.ic_volume_off_black_24dp);;
+        mIvSpeak.setEnabled(enabled);
 
         mIvSpeak.setVisibility(loading?View.GONE:View.VISIBLE);
         mPbSpeak.setVisibility(loading?View.VISIBLE:View.GONE);
@@ -293,10 +340,56 @@ public class TranslateFragment extends StandardFragment implements TranslateView
     @Override
     public void setTranslateSpeechStatus(boolean enabled, boolean loading) {
         mIvSpeakTrsl.setImageResource(enabled?R.drawable.ic_volume_up_black_24dp:R.drawable.ic_volume_off_black_24dp);
-        mIvSpeakTrsl.setColorFilter(ContextCompat.getColor(getActivity(), enabled?R.color.colorGrayPic:R.color.colorLightGray));
+        mIvSpeakTrsl.setEnabled(enabled);
 
         mIvSpeakTrsl.setVisibility(loading?View.GONE:View.VISIBLE);
         mPbSpeakTrsl.setVisibility(loading?View.VISIBLE:View.GONE);
+    }
+
+    @Override
+    public void startFullscreen(Intent intent) {
+        startActivity(intent);
+    }
+
+    @Override
+    public void showToast(String text) {
+        Toast.makeText(getActivity(), text, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void share(String text) {
+        Intent sendIntent = new Intent();
+        sendIntent.setAction(Intent.ACTION_SEND);
+        sendIntent.putExtra(Intent.EXTRA_TEXT, text);
+        sendIntent.setType("text/plain");
+        startActivity(sendIntent);
+    }
+
+    @Override
+    public void setTranslationButtonsEnabled(boolean enabled) {
+
+        Log.d(TAG, "setTranslationButtonsEnabled, enabled="+enabled);
+
+        mAreButtonsEnabled=enabled;
+
+        mIvFavorite.setEnabled(enabled);
+        mIvShare.setEnabled(enabled);
+        mIvBig.setEnabled(enabled);
+
+        if (!mAreButtonsEnabled)
+            mIvFavorite.setColorFilter(ContextCompat.getColor(getActivity(), R.color.colorLightGray));
+        else  mIvFavorite.setColorFilter(ContextCompat.getColor(getActivity(), mIsFavorite?R.color.colorAccent:R.color.colorGrayPic));
+    }
+
+    @Override
+    public void setFavoriteOn(boolean on) {
+        Log.d(TAG, "setFavoriteOn, on="+on);
+
+        mIsFavorite=on;
+
+        if (mAreButtonsEnabled)
+            mIvFavorite.setColorFilter(ContextCompat.getColor(getActivity(), on?R.color.colorAccent:R.color.colorGrayPic));
+        else mIvFavorite.setColorFilter(R.color.colorLightGray);
     }
 
     @Override
@@ -524,11 +617,11 @@ public class TranslateFragment extends StandardFragment implements TranslateView
 
     }
 
-
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        Log.d(TAG, "onActivityResult, requestCode="+requestCode+" resultCode="+resultCode);
         mPresenter.activityResult(requestCode, resultCode, data);
     }
 }

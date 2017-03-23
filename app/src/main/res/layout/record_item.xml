@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="80dp"
+    android:id="@+id/rlContent">
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/ivIcon"
+        android:src="@drawable/ic_bookmark_black_24dp"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="15dp"
+        android:layout_marginRight="15dp"
+        android:tint="@color/colorAccent" />
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_toLeftOf="@+id/tvDir"
+        android:layout_centerVertical="true"
+        android:layout_toRightOf="@+id/ivIcon">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="Medium Text"
+            android:id="@+id/tvText"
+            android:textColor="@color/colorBlackText"
+            android:layout_marginLeft="13dp"
+            android:layout_marginTop="13dp"
+            android:layout_marginRight="10dp"
+            android:layout_toLeftOf="@+id/tvDir"
+            android:layout_marginBottom="5dp"
+            android:singleLine="true"
+            android:ellipsize="end" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="Medium Text"
+            android:id="@+id/tvTranslation"
+            android:textColor="#555"
+            android:layout_marginLeft="13dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginBottom="13dp"
+            android:layout_toLeftOf="@+id/tvDir"
+            android:ellipsize="end"
+            android:singleLine="true" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/tvDir"
+        android:layout_centerVertical="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginRight="15dp"
+        android:src="@drawable/ic_check_black_24dp"
+        android:visibility="visible"
+        android:text="EN - RU" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:id="@+id/textView3"
+        android:layout_alignParentBottom="false"
+        android:background="#DDD"
+        android:layout_marginTop="79dp" />
+</RelativeLayout>

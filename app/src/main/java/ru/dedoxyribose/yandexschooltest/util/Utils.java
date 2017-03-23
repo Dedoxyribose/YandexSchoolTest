@@ -1,7 +1,14 @@
 package ru.dedoxyribose.yandexschooltest.util;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.res.Resources;
+import android.graphics.Typeface;
 import android.support.annotation.StringRes;
+import android.util.DisplayMetrics;
+import android.util.TypedValue;
+import android.view.View;
+import android.widget.TextView;
 
 import com.google.gson.reflect.TypeToken;
 
@@ -32,11 +39,11 @@ import ru.dedoxyribose.yandexschooltest.model.viewmodel.TrItem;
 public class Utils {
 
     public static String [] speakableLangs = {
-            "ru", "en", "ua", "tr"
+            "ru", "en", "uk", "tr"
     };
 
     public static String [] speakableLangsCodes = {
-            "en-EN", "ru-RU", "tr-TR", "uk-UA"
+            "ru-RU", "en-EN", "uk-UA", "tr-TR",
     };
 
 
@@ -187,5 +194,40 @@ public class Utils {
                 return speakableLangsCodes[i];
         }
         return null;
+    }
+
+
+    public static int calculateTextViewHeight(Context context, CharSequence text, int textSize, int deviceWidth, Typeface typeface, int padding) {
+        TextView textView = new TextView(context);
+        textView.setPadding(padding,0,padding,padding);
+        textView.setTypeface(typeface);
+        textView.setText(text, TextView.BufferType.SPANNABLE);
+        textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, textSize);
+        int widthMeasureSpec = View.MeasureSpec.makeMeasureSpec(deviceWidth, View.MeasureSpec.AT_MOST);
+        int heightMeasureSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
+        textView.measure(widthMeasureSpec, heightMeasureSpec);
+        return textView.getMeasuredHeight();
+    }
+
+    public static int dpToPx(int dp) {
+        return (int) (dp * Resources.getSystem().getDisplayMetrics().density);
+    }
+
+    public static int pxToDp(int px) {
+        return (int) (px / Resources.getSystem().getDisplayMetrics().density);
+    }
+
+    public static int getScreenWidth(Context context) {
+        DisplayMetrics metrics = context.getResources().getDisplayMetrics();
+        return metrics.widthPixels;
+    }
+
+    public static int getScreenHeight(Activity activity) {
+        DisplayMetrics metrics = activity.getResources().getDisplayMetrics();
+        return metrics.heightPixels;
+    }
+
+    public static String getAppTag() {
+        return "YSTAPP";
     }
 }

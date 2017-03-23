@@ -7,6 +7,7 @@ import com.arellomobile.mvp.MvpPresenter;
 
 import ru.dedoxyribose.yandexschooltest.util.Singletone;
 import ru.dedoxyribose.yandexschooltest.model.entity.DaoSession;
+import ru.dedoxyribose.yandexschooltest.util.Utils;
 
 
 /**
@@ -14,11 +15,12 @@ import ru.dedoxyribose.yandexschooltest.model.entity.DaoSession;
  */
 public class StandardMvpPresenter<MvpView extends com.arellomobile.mvp.MvpView> extends MvpPresenter<MvpView> {
 
+    protected static String APP_TAG= Utils.getAppTag();
     protected static String TAG;
     private DaoSession mDaoSession;
 
     public StandardMvpPresenter() {
-        TAG=getClass().getName().substring(0,Math.min(getClass().getName().length(), 21));
+        TAG=this.toString();
         mDaoSession= Singletone.getDaoSession();
     }
 

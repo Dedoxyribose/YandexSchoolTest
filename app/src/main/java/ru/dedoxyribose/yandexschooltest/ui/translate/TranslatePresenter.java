@@ -2,6 +2,8 @@ package ru.dedoxyribose.yandexschooltest.ui.translate;
 
 
 import android.app.Activity;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
@@ -10,26 +12,26 @@ import android.widget.Toast;
 
 import com.arellomobile.mvp.InjectViewState;
 
+import org.greenrobot.eventbus.EventBus;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ru.dedoxyribose.yandexschooltest.R;
-import ru.dedoxyribose.yandexschooltest.model.entity.Def;
+import ru.dedoxyribose.yandexschooltest.event.RecordChangedEvent;
 import ru.dedoxyribose.yandexschooltest.model.entity.Lang;
 import ru.dedoxyribose.yandexschooltest.model.entity.Record;
 import ru.dedoxyribose.yandexschooltest.model.viewmodel.ListItem;
 import ru.dedoxyribose.yandexschooltest.ui.chooselang.ChooseLangActivity;
+import ru.dedoxyribose.yandexschooltest.ui.fullscreen.FullscreenActivity;
 import ru.dedoxyribose.yandexschooltest.ui.standard.StandardMvpPresenter;
 import ru.dedoxyribose.yandexschooltest.util.RetrofitHelper;
-import ru.dedoxyribose.yandexschooltest.util.ServerApi;
 import ru.dedoxyribose.yandexschooltest.util.Singletone;
 import ru.dedoxyribose.yandexschooltest.util.Utils;
 import ru.yandex.speechkit.Error;
@@ -47,9 +49,8 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
     public static final long INPUT_TIMEOUT=500;
 
-    private Record mCurRecord;
+    private volatile Record mCurRecord;
     private String mCurText="";
-    private String mCurDirection="en-ru";
 
     private boolean mGotDictionaryResponse;
     private boolean mGotTranslationResponse;
@@ -70,9 +71,16 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
     private boolean mTextSpeechProgress=false;
     private boolean mTranslateSpeechProgress=false;
 
+    private Vocalizer mTextVocalizer;
+    private Vocalizer mTranslateVocalizer;
+
     @Override
     protected void onFirstViewAttach() {
         super.onFirstViewAttach();
+
+        Log.d(APP_TAG, TAG+this.toString());
+
+        getViewState().setTranslationButtonsEnabled(false);
 
         mWaiter=new Thread(new Runnable() {
             @Override
@@ -86,7 +94,14 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
                             new Handler(Looper.getMainLooper()).post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    makeCall(false);
+                                    if (mCurRecord==null || mCurRecord.getText()==null || !mCurRecord.getText().equals(mCurText)) {
+                                        Log.d(APP_TAG, TAG+"mCurRecord="+mCurRecord);
+                                        if (mCurRecord!=null) Log.d(APP_TAG, TAG+"mCurRecord.text="+mCurRecord.getText());
+                                        if (mCurRecord!=null) Log.d(APP_TAG, TAG+"mCurText="+mCurText);
+                                        Log.d(APP_TAG, TAG+"not final call, on timer");
+                                        makeCall(false);
+                                    }
+
                                 }
                             });
                         }
@@ -119,6 +134,9 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
         mPresenterDestroyed=true;
         if (mWaiter!=null && mWaiter.isAlive()) mWaiter.interrupt();
+
+        if (mTextVocalizer!=null) mTextVocalizer.cancel();
+        if (mTranslateVocalizer!=null) mTranslateVocalizer.cancel();
     }
 
     @Override
@@ -130,11 +148,13 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
     public void clearClicked() {
         getViewState().setText("");
+        mRequestNum++;
+
     }
 
     public void textChanged(CharSequence charSequence) {
 
-        Log.d(TAG, "textChanged()");
+        Log.d(APP_TAG, TAG+"textChanged()");
 
         mLastChangeTextTime=System.currentTimeMillis();
 
@@ -147,7 +167,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
     public void returnPressed() {
 
-        Log.d(TAG, "returnPressed");
+        Log.d(APP_TAG, TAG+"returnPressed");
         if (mCurText.length()>0) {
 
             makeFinalCall();
@@ -158,11 +178,11 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
     private void doMakeCall(final boolean finalCall) {
 
-        Log.d(TAG, "doMakeCall()");
+        Log.d(APP_TAG, TAG+"doMakeCall()");
 
         final int curReqNum=mRequestNum;
 
-        String direction=mLangFrom.getCode()+"-"+mLangTo.getCode();
+        final String direction=mLangFrom.getCode()+"-"+mLangTo.getCode();
 
         RetrofitHelper.getServerApi().lookup(getContext().getString(R.string.dict_key),
                 direction, mCurText, "ru").enqueue(
@@ -170,12 +190,12 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
                     @Override
                     public void onResponse(Call<Record> call, Response<Record> response) {
                         gotResponse(curReqNum, finalCall,  true, response.isSuccessful(), Utils.extractErrorCode(response),
-                                response.isSuccessful()?response.body():null);
+                                response.isSuccessful()?response.body():null, direction);
                     }
 
                     @Override
                     public void onFailure(Call<Record> call, Throwable t) {
-                        gotResponse(curReqNum, finalCall, true, false, 0, null);
+                        gotResponse(curReqNum, finalCall, true, false, 0, null, direction);
                         if (t!=null) t.printStackTrace();
                     }
                 });
@@ -186,12 +206,12 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
                     @Override
                     public void onResponse(Call<Record> call, Response<Record> response) {
                         gotResponse(curReqNum, finalCall, false, response.isSuccessful(), Utils.extractErrorCode(response),
-                                response.isSuccessful()?response.body():null);
+                                response.isSuccessful()?response.body():null, direction);
                     }
 
                     @Override
                     public void onFailure(Call<Record> call, Throwable t) {
-                        gotResponse(curReqNum, finalCall, false, false, 0, null);
+                        gotResponse(curReqNum, finalCall, false, false, 0, null, direction);
                         if (t!=null) t.printStackTrace();
                     }
                 });
@@ -200,15 +220,51 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
     private void makeFinalCall() {
 
-        Log.d(TAG, "makeFinalCall()");
+        Log.d(APP_TAG, TAG+"makeFinalCall()");
 
-        makeCall(true);
+        if (mCurRecord==null || mCurRecord.getText()==null || !mCurRecord.getText().equals(mCurText) || mWasDetermined)
+            makeCall(true);
+        else if (mCurRecord!=null && mCurRecord.getText()!=null && mCurRecord.getText().equals(mCurText)) {
+            mWasDetermined=false;
+            saveCurRecord();
+        }
 
+    }
+
+    private void saveCurRecord() {
+
+        Log.d(APP_TAG, TAG+"saveCurRecord");
+
+        Record record=getDaoSession().getRecordDao().load(mCurRecord.getId());
+
+        if (record!=null) {
+            mCurRecord=record.copy();
+            mCurRecord.setHistoryTime(System.currentTimeMillis());
+            mCurRecord.setInHistory(true);
+        }
+        else {
+            mCurRecord.setInHistory(true);
+            mCurRecord.setHistoryTime(System.currentTimeMillis());
+        }
+
+        getDaoSession().getRecordDao().insertOrReplace(mCurRecord);
+
+        EventBus.getDefault().post(new RecordChangedEvent(mCurRecord, RecordChangedEvent.SENDER_TRANSLATION));
     }
 
     private void makeCall(final boolean finalCall) {
 
-        Log.d(TAG, "makeCall()");
+        Log.d(APP_TAG, TAG+"makeCall(), mCurText="+mCurText);
+
+        if (mCurText.length()==0) {
+            mCurRecord=null;
+            getViewState().setDefData(new ArrayList<ListItem>());
+            getViewState().setMainText(null);
+            updateFavoriteButton();
+            mLastChangeTextTime=0;
+            getViewState().setTranslationButtonsEnabled(false);
+            return;
+        }
 
         mLastChangeTextTime=0;
 
@@ -244,7 +300,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
                                 try {
                                     JSONObject jsonObject = new JSONObject(response.body().string());
-                                    Log.d(TAG, jsonObject.toString());
+                                    Log.d(APP_TAG, TAG+jsonObject.toString());
                                     if (jsonObject.optString("lang")!=null) {
                                         String code=jsonObject.optString("lang");
                                         mLangFrom=Utils.getLangByCode(code, Singletone.getInstance().getLangs());
@@ -294,9 +350,9 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
     }
 
 
-    public void gotResponse(int reqNum, boolean finalCall, boolean dictionary, boolean successful, int errorCode, Record record) {
+    public void gotResponse(int reqNum, boolean finalCall, boolean dictionary, boolean successful, int errorCode, Record record, String direction) {
 
-        Log.d(TAG, "gotResponse, successfull="+successful+" errorCode="+errorCode);
+        Log.d(APP_TAG, TAG+"gotResponse, successfull="+successful+" errorCode="+errorCode);
         if (reqNum!=mRequestNum) return;
 
         if (!successful && !(dictionary && errorCode==501)) {
@@ -336,26 +392,32 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
                 getViewState().showLoading(false);
 
-                if (mDictionaryRecord==null || mDictionaryRecord.getText()==null || mDictionaryRecord.getText().length()<1) {
-                    mCurRecord=mTranslationRecord;
+                if (mDictionaryRecord == null || mDictionaryRecord.getText() == null || mDictionaryRecord.getText().length() < 1) {
+                    mCurRecord = mTranslationRecord;
                     mCurRecord.setText(mCurText);
                     getViewState().setMainText(mCurRecord.getTranslation());
-                }
-                else {
-                    mCurRecord=mDictionaryRecord;
-                    mCurRecord.setDirection(mCurDirection);
+                } else {
+                    mCurRecord = mDictionaryRecord;
+                    mCurRecord.setDirection(direction);
                     getViewState().setMainText(mCurRecord.getTranslation());
                 }
                 getViewState().setDefData(Utils.generateViewModelList(mCurRecord));
+                getViewState().setTranslationButtonsEnabled(!Utils.isEmpty(mCurRecord.getTranslation()));
 
-                if (finalCall) mWasDetermined=false;
+                if (finalCall) {
+                    mWasDetermined = false;
+                    saveCurRecord();
+                }
+
+                updateSpeechButtonStates();
+                updateFavoriteButton();
             }
         }
     }
 
     public void repeatClicked() {
 
-        Log.d(TAG, "repeatClicked");
+        Log.d(APP_TAG, TAG+"repeatClicked");
         if (mCurText.length()>0) {
             makeFinalCall();
         }
@@ -377,7 +439,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
     public void exchangeClicked() {
 
-        Log.d(TAG, "exchangeClicked()");
+        Log.d(APP_TAG, TAG+"exchangeClicked()");
 
         if (mLangFrom==null) return;
 
@@ -402,10 +464,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
         String from=(mLangFrom==null)?getContext().getString(R.string.DetermineLang):mLangFrom.getName();
         getViewState().showLangs(from, to, mWasDetermined && mLangFrom!=null);
 
-        getViewState().setRecognitionEnabled(mLangFrom!=null && Utils.getSpeechCodeForLang(mLangFrom.getCode())!=null);
-        getViewState().setTextSpeechStatus(mLangFrom!=null && Utils.getSpeechCodeForLang(mLangFrom.getCode())!=null, mTextSpeechProgress);
-        getViewState().setTranslateSpeechStatus(mCurRecord!=null && mCurRecord.getDirection()!=null &&
-                Utils.getSpeechCodeForLang(mCurRecord.getDirection().substring(3))!=null, mTextSpeechProgress);
+        updateSpeechButtonStates();
     }
 
     public void activityResult(int requestCode, int resultCode, Intent data) {
@@ -452,7 +511,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
             if (mCurText.length()>0) makeCall(false);
         }
-        else if (requestCode == TranslateFragment.REQUEST_CODE_RECOGNIZE && resultCode == Activity.RESULT_OK) {
+        else if (requestCode == TranslateFragment.REQUEST_CODE_RECOGNIZE && resultCode == RecognizerActivity.RESULT_OK) {
             final String result = data.getStringExtra(RecognizerActivity.EXTRA_RESULT);
             setCurText(result);
             makeFinalCall();
@@ -480,7 +539,10 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
     }
 
     public void textLostFocus() {
-        makeFinalCall();
+
+        Log.d(APP_TAG, TAG+"textLostFocus");
+
+            makeFinalCall();
     }
 
     public void synonymClicked(String word) {
@@ -508,39 +570,43 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
         if (mLangFrom!=null && Utils.getSpeechCodeForLang(mLangFrom.getCode())!=null) {
             mTextSpeechProgress=true;
-            Vocalizer vocalizer=Vocalizer.createVocalizer(Utils.getSpeechCodeForLang(mLangFrom.getCode()), mCurText, true);
-            vocalizer.setListener(new VocalizerListener() {
+            mTextVocalizer=Vocalizer.createVocalizer(Utils.getSpeechCodeForLang(mLangFrom.getCode()), mCurText, true);
+            mTextVocalizer.setListener(new VocalizerListener() {
                 @Override
                 public void onSynthesisBegin(Vocalizer vocalizer) {
-
+                    Log.d(APP_TAG, TAG+"onSynthesisBegin");
                 }
 
                 @Override
                 public void onSynthesisDone(Vocalizer vocalizer, Synthesis synthesis) {
-
+                    Log.d(APP_TAG, TAG+"onSynthesisDone");
                 }
 
                 @Override
                 public void onPlayingBegin(Vocalizer vocalizer) {
-
+                    Log.d(APP_TAG, TAG+"onPlayingBegin");
                 }
 
                 @Override
                 public void onPlayingDone(Vocalizer vocalizer) {
+                    Log.d(APP_TAG, TAG+"onPlayingDone");
                     mTextSpeechProgress=false;
                     showLangs();
                 }
 
                 @Override
                 public void onVocalizerError(Vocalizer vocalizer, Error error) {
+                    Log.d(APP_TAG, TAG+"onVocalizerError");
                     mTextSpeechProgress=false;
                     showLangs();
                     Toast.makeText(getContext(), getContext().getString(R.string.UnableToSynthesizeSpeech), Toast.LENGTH_SHORT).show();
                 }
             });
-            vocalizer.start();
+            mTextVocalizer.start();
 
             showLangs();
+
+            makeFinalCall();
         }
     }
 
@@ -549,40 +615,45 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
         if (mCurRecord!=null && mCurRecord.getTranslation()!=null && mCurRecord.getDirection()!=null &&
                 Utils.getSpeechCodeForLang(mCurRecord.getDirection().substring(3))!=null) {
             mTranslateSpeechProgress=true;
-            Vocalizer vocalizer=Vocalizer.createVocalizer(
+            Log.d(APP_TAG, TAG+"direction="+mCurRecord.getDirection());
+            mTranslateVocalizer=Vocalizer.createVocalizer(
                     Utils.getSpeechCodeForLang(mCurRecord.getDirection().substring(3)), mCurRecord.getTranslation(), true);
-            vocalizer.setListener(new VocalizerListener() {
+            mTranslateVocalizer.setListener(new VocalizerListener() {
                 @Override
                 public void onSynthesisBegin(Vocalizer vocalizer) {
-
+                    Log.d(APP_TAG, TAG+"onSynthesisBegin");
                 }
 
                 @Override
                 public void onSynthesisDone(Vocalizer vocalizer, Synthesis synthesis) {
-
+                    Log.d(APP_TAG, TAG+"onSynthesisDone");
                 }
 
                 @Override
                 public void onPlayingBegin(Vocalizer vocalizer) {
-
+                    Log.d(APP_TAG, TAG+"onPlayingBegin");
                 }
 
                 @Override
                 public void onPlayingDone(Vocalizer vocalizer) {
+                    Log.d(APP_TAG, TAG+"onPlayingDone");
                     mTranslateSpeechProgress=false;
                     showLangs();
                 }
 
                 @Override
                 public void onVocalizerError(Vocalizer vocalizer, Error error) {
+                    Log.d(APP_TAG, TAG+"onVocalizerError");
                     mTranslateSpeechProgress=false;
                     showLangs();
                     Toast.makeText(getContext(), getContext().getString(R.string.UnableToSynthesizeSpeech), Toast.LENGTH_SHORT).show();
                 }
             });
-            vocalizer.start();
+            mTranslateVocalizer.start();
 
             showLangs();
+
+            saveCurRecord();
         }
     }
 
@@ -591,4 +662,74 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
         getViewState().setText(text);
     }
 
+    private void updateSpeechButtonStates(){
+        getViewState().setRecognitionEnabled(mLangFrom!=null && Utils.getSpeechCodeForLang(mLangFrom.getCode())!=null);
+        getViewState().setTextSpeechStatus(mLangFrom!=null && Utils.getSpeechCodeForLang(mLangFrom.getCode())!=null
+                && mCurText.length()<=100, mTextSpeechProgress);
+        getViewState().setTranslateSpeechStatus(mCurRecord!=null && mCurRecord.getDirection()!=null &&
+                Utils.getSpeechCodeForLang(mCurRecord.getDirection().substring(3))!=null
+                && !Utils.isEmpty(mCurRecord.getTranslation()) && mCurRecord.getTranslation().length()<=100, mTranslateSpeechProgress);
+    }
+
+
+    public void bigClicked() {
+        if (mCurRecord!=null && mCurRecord.getTranslation()!=null && mCurRecord.getTranslation().length()>0) {
+            Intent intent=new Intent(getContext(), FullscreenActivity.class);
+            intent.putExtra(FullscreenActivity.ARG_TEXT, mCurRecord.getTranslation());
+            getViewState().startFullscreen(intent);
+
+            saveCurRecord();
+        }
+    }
+
+    public void mainTextClicked() {
+
+        copyTextToClipBoard();
+
+        getViewState().hideSoftKeyboard();
+        getViewState().clearTextFocus();
+    }
+
+    private void copyTextToClipBoard() {
+
+        if (mCurRecord!=null && mCurRecord.getTranslation()!=null) {
+            ClipboardManager clipboard = (ClipboardManager) getContext().getSystemService(Activity.CLIPBOARD_SERVICE);
+            ClipData clip = ClipData.newPlainText("translation", mCurRecord.getTranslation());
+            clipboard.setPrimaryClip(clip);
+
+            getViewState().showToast(getContext().getString(R.string.TranslationCopied));
+        }
+
+    }
+
+    public void shareClicked() {
+        if (mCurRecord!=null && !Utils.isEmpty(mCurRecord.getTranslation())) {
+            getViewState().share(mCurRecord.getTranslation());
+            saveCurRecord();
+        }
+    }
+
+    private void updateFavoriteButton() {
+        if (mCurRecord!=null && !Utils.isEmpty(mCurRecord.getText())) {
+            if (getDaoSession().getRecordDao().load(mCurRecord.getId())!=null) {
+                getViewState().setFavoriteOn(getDaoSession().getRecordDao().load(mCurRecord.getId()).isInFavorite());
+                return;
+            }
+        }
+        getViewState().setFavoriteOn(false);
+    }
+
+    public void favoriteClicked() {
+
+        if (mCurRecord==null || Utils.isEmpty(mCurRecord.getText())) return;
+
+        saveCurRecord();
+
+        mCurRecord.setInFavorite(!mCurRecord.isInFavorite());
+        getDaoSession().insertOrReplace(mCurRecord);
+        getViewState().setFavoriteOn(mCurRecord.isInFavorite());
+
+        EventBus.getDefault().post(new RecordChangedEvent(mCurRecord, RecordChangedEvent.SENDER_TRANSLATION));
+
+    }
 }
