@@ -35,4 +35,7 @@
     <string name="UnableToDetermine">Не удалось определить</string>
     <string name="UnableToSynthesizeSpeech">Не удалось синтезировать речь</string>
     <string name="TranslationCopied">Перевод скопирован</string>
+    <string name="Delete">Удалить</string>
+    <string name="Favorite">Избранное</string>
+    <string name="History">История</string>
 </resources>

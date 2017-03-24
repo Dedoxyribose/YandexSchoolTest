@@ -39,4 +39,10 @@
     <string name="TranslationCopied">Translation was copied to clipboard</string>
     <string name="History">History</string>
     <string name="Favorite">Favorite</string>
+    <string name="Delete">Delete</string>
+    <string name="WannaClearFavorite">Are you sure you want to clear favorite list?</string>
+    <string name="WannaClearHistory">Are you sure you want to clear history?</string>
+    <string name="Cancel">Cancel</string>
+    <string name="Clear">Clear</string>
+    <string name="ListIsEmpty">The list is empty</string>
 </resources>

@@ -93,6 +93,8 @@ public class HistoriesFragment extends StandardFragment  {
                 if (mPagerAdapter.getRegisteredFragment(i)!=null) {
                     ((RecordListFragment)mPagerAdapter.getRegisteredFragment(i)).update();
                 }
+
+                updateClearButtonState();
             }
 
             @Override
@@ -101,16 +103,34 @@ public class HistoriesFragment extends StandardFragment  {
             }
         });
 
-        mTabLayout.setTabTextColors(ContextCompat.getColor(getActivity(), R.color.colorGrayPic),
+        mTabLayout.setTabTextColors(ContextCompat.getColor(getActivity(), R.color.colorDarkGray),
                 ContextCompat.getColor(getActivity(), R.color.colorBlackText));
 
         mTabLayout.setSelectedTabIndicatorColor(ContextCompat.getColor(getActivity(), R.color.colorBlackText));
+
+        mIvClear.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (mPagerAdapter.getRegisteredFragment(mViewPager.getCurrentItem())!=null) {
+                    ((RecordListFragment)mPagerAdapter.getRegisteredFragment(mViewPager.getCurrentItem())).clearClicked();
+                }
+            }
+        });
 
     }
 
     public void focusLost() {
         if (mPagerAdapter.getRegisteredFragment(mViewPager.getCurrentItem())!=null) {
             ((RecordListFragment)mPagerAdapter.getRegisteredFragment(mViewPager.getCurrentItem())).update();
+        }
+    }
+
+    public void updateClearButtonState() {
+        if (mPagerAdapter.getRegisteredFragment(mViewPager.getCurrentItem())!=null) {
+
+            mIvClear.setVisibility(
+                    ((RecordListFragment)mPagerAdapter.getRegisteredFragment(mViewPager.getCurrentItem())).getClearButtonState()?
+                            View.VISIBLE:View.GONE);
         }
     }
 

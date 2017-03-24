@@ -34,7 +34,11 @@
                 android:layout_height="50dp"
                 android:layout_marginRight="5dp"
                 android:layout_gravity="right|center_vertical"
-                android:id="@+id/ivClear" />
+                android:id="@+id/ivClear"
+                android:visibility="visible"
+                android:src="@drawable/ic_delete_black_36dp"
+                android:scaleType="fitXY"
+                android:padding="10dp" />
 
 
         </android.support.v7.widget.Toolbar>

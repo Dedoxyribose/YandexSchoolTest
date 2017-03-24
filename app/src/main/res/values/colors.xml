@@ -6,6 +6,7 @@
     <color name="colorGrayPic">#888</color>
     <color name="colorBlackText">#111</color>
     <color name="colorGrayText">#999</color>
+    <color name="colorDarkGray">#444</color>
     <color name="colorLightGray">#CCC</color>
     <color name="colorLightPink">#C282C2</color>
     <color name="colorLightBlue">#5365AD</color>

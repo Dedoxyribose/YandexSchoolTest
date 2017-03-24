@@ -13,6 +13,8 @@ import android.widget.Toast;
 import com.arellomobile.mvp.InjectViewState;
 
 import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -24,12 +26,15 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ru.dedoxyribose.yandexschooltest.R;
+import ru.dedoxyribose.yandexschooltest.event.FullReloadNeededEvent;
 import ru.dedoxyribose.yandexschooltest.event.RecordChangedEvent;
+import ru.dedoxyribose.yandexschooltest.event.SelectRecordEvent;
 import ru.dedoxyribose.yandexschooltest.model.entity.Lang;
 import ru.dedoxyribose.yandexschooltest.model.entity.Record;
 import ru.dedoxyribose.yandexschooltest.model.viewmodel.ListItem;
 import ru.dedoxyribose.yandexschooltest.ui.chooselang.ChooseLangActivity;
 import ru.dedoxyribose.yandexschooltest.ui.fullscreen.FullscreenActivity;
+import ru.dedoxyribose.yandexschooltest.ui.recordlist.RecordListFragment;
 import ru.dedoxyribose.yandexschooltest.ui.standard.StandardMvpPresenter;
 import ru.dedoxyribose.yandexschooltest.util.RetrofitHelper;
 import ru.dedoxyribose.yandexschooltest.util.Singletone;
@@ -126,6 +131,8 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
         showLangs();
 
+        EventBus.getDefault().register(this);
+
     }
 
     @Override
@@ -137,6 +144,8 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
         if (mTextVocalizer!=null) mTextVocalizer.cancel();
         if (mTranslateVocalizer!=null) mTranslateVocalizer.cancel();
+
+        EventBus.getDefault().unregister(this);
     }
 
     @Override
@@ -262,6 +271,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
             getViewState().setMainText(null);
             updateFavoriteButton();
             mLastChangeTextTime=0;
+            getViewState().setTranslateSpeechStatus(false, mTranslateSpeechProgress);
             getViewState().setTranslationButtonsEnabled(false);
             return;
         }
@@ -726,10 +736,69 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
         saveCurRecord();
 
         mCurRecord.setInFavorite(!mCurRecord.isInFavorite());
+        if (mCurRecord.isInFavorite()) mCurRecord.setFavoriteTime(System.currentTimeMillis());
         getDaoSession().insertOrReplace(mCurRecord);
         getViewState().setFavoriteOn(mCurRecord.isInFavorite());
 
         EventBus.getDefault().post(new RecordChangedEvent(mCurRecord, RecordChangedEvent.SENDER_TRANSLATION));
+
+    }
+
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onRecordChangedEvent(RecordChangedEvent event) {
+
+        Log.d(APP_TAG, TAG + "onRecordChangedEvent");
+
+        if (event.getSender() == RecordChangedEvent.SENDER_TRANSLATION) return;
+
+        if (mCurRecord!=null && event.getRecord().getId().equals(mCurRecord.getId())) {
+            mCurRecord.setInFavorite(event.getRecord().isInFavorite());
+            getViewState().setFavoriteOn(mCurRecord.isInFavorite());
+        }
+
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onSelectRecordEvent(SelectRecordEvent selectRecordEvent) {
+
+        Log.d(APP_TAG, TAG + "onRecordChangedEvent");
+
+        mCurRecord=selectRecordEvent.getRecord().copy();
+        mCurText=mCurRecord.getText();
+        getViewState().setText(mCurRecord.getText());
+        mRequestNum++;
+
+        getViewState().showLoading(false);
+
+        if (mCurRecord.getType()==Record.TYPE_SENTENSE) {
+            mTranslationRecord = mCurRecord;
+            getViewState().setMainText(mCurRecord.getTranslation());
+        } else {
+            mDictionaryRecord = mCurRecord;
+            getViewState().setMainText(mCurRecord.getTranslation());
+        }
+        getViewState().setDefData(Utils.generateViewModelList(mCurRecord));
+        getViewState().setTranslationButtonsEnabled(!Utils.isEmpty(mCurRecord.getTranslation()));
+
+        mLangFrom=Utils.getLangByCode(mCurRecord.getDirection().substring(0,2), Singletone.getInstance().getLangs());
+        mLangTo=Utils.getLangByCode(mCurRecord.getDirection().substring(3,5), Singletone.getInstance().getLangs());
+
+        showLangs();
+
+        updateSpeechButtonStates();
+        updateFavoriteButton();
+
+    }
+
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onFullReloadNeededEvent(FullReloadNeededEvent event) {
+
+        if (event.getSender()==FullReloadNeededEvent.SENDER_FAVORITE && mCurRecord!=null) {
+            mCurRecord.setInFavorite(false);
+            getViewState().setFavoriteOn(false);
+        }
 
     }
 }

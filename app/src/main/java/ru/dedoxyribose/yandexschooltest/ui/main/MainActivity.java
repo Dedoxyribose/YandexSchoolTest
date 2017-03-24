@@ -11,16 +11,25 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.view.menu.MenuView;
 import android.util.Log;
 import android.util.SparseArray;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.arellomobile.mvp.presenter.InjectPresenter;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
 import ru.dedoxyribose.yandexschooltest.R;
+import ru.dedoxyribose.yandexschooltest.event.SelectRecordEvent;
+import ru.dedoxyribose.yandexschooltest.model.entity.Record;
 import ru.dedoxyribose.yandexschooltest.ui.histories.HistoriesFragment;
 import ru.dedoxyribose.yandexschooltest.ui.standard.StandardActivity;
 import ru.dedoxyribose.yandexschooltest.ui.translate.TranslateFragment;
+import ru.dedoxyribose.yandexschooltest.util.Singletone;
+import ru.dedoxyribose.yandexschooltest.util.Utils;
 import ru.dedoxyribose.yandexschooltest.widget.NonSwipeableViewPager;
 
 public class MainActivity extends StandardActivity implements MainView {
@@ -174,5 +183,29 @@ public class MainActivity extends StandardActivity implements MainView {
         super.onBackPressed();
 
         Log.d("aa", "onBackPressed");
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onSelectRecordEvent(SelectRecordEvent selectRecordEvent) {
+
+        mViewPager.setCurrentItem(0);
+
+        Menu menu = mBottomNavigationView.getMenu();
+        for (int i = 0, size = menu.size(); i < size; i++) {
+            MenuItem item = menu.getItem(i);
+            item.setChecked(i==1);
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        EventBus.getDefault().register(this);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        EventBus.getDefault().unregister(this);
     }
 }

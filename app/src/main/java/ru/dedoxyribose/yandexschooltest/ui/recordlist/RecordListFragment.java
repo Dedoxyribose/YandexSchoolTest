@@ -1,35 +1,27 @@
 package ru.dedoxyribose.yandexschooltest.ui.recordlist;
 
 import android.app.Activity;
-import android.content.Intent;
+import android.content.DialogInterface;
+
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+
 import android.text.Editable;
-import android.text.Html;
-import android.text.Spannable;
-import android.text.SpannableStringBuilder;
-import android.text.Spanned;
-import android.text.TextPaint;
 import android.text.TextWatcher;
-import android.text.method.LinkMovementMethod;
-import android.text.style.ClickableSpan;
-import android.util.Log;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
+
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.EditorInfo;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
+
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
+
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
+
 
 import com.arellomobile.mvp.presenter.InjectPresenter;
 
@@ -39,17 +31,10 @@ import java.util.List;
 import me.zhanghai.android.materialprogressbar.MaterialProgressBar;
 import ru.dedoxyribose.yandexschooltest.R;
 import ru.dedoxyribose.yandexschooltest.model.entity.Record;
-import ru.dedoxyribose.yandexschooltest.model.entity.Word;
-import ru.dedoxyribose.yandexschooltest.model.viewmodel.DefTitle;
-import ru.dedoxyribose.yandexschooltest.model.viewmodel.ExItem;
-import ru.dedoxyribose.yandexschooltest.model.viewmodel.ListItem;
-import ru.dedoxyribose.yandexschooltest.model.viewmodel.TrItem;
+
+import ru.dedoxyribose.yandexschooltest.ui.histories.HistoriesFragment;
 import ru.dedoxyribose.yandexschooltest.ui.standard.StandardFragment;
-import ru.dedoxyribose.yandexschooltest.ui.translate.TranslatePresenter;
-import ru.dedoxyribose.yandexschooltest.ui.translate.TranslateView;
-import ru.dedoxyribose.yandexschooltest.util.Utils;
-import ru.dedoxyribose.yandexschooltest.widget.EditTextMultilineDone;
-import ru.dedoxyribose.yandexschooltest.widget.TintableImageView;
+
 
 
 public class RecordListFragment extends StandardFragment implements RecordListView {
@@ -62,6 +47,7 @@ public class RecordListFragment extends StandardFragment implements RecordListVi
     private int mType;
 
     private EditText mEtSearch;
+    private TextView mTvEmpty;
     private ImageView mIvSearchClear;
     private MaterialProgressBar mPbLoad;
     private RecyclerView mRvList;
@@ -130,10 +116,46 @@ public class RecordListFragment extends StandardFragment implements RecordListVi
         mIvSearchClear = (ImageView) view.findViewById(R.id.ivSearchClear);
         mPbLoad = (MaterialProgressBar) view.findViewById(R.id.pbLoad);
         mRvList = (RecyclerView) view.findViewById(R.id.rvList);
+        mTvEmpty = (TextView) view.findViewById(R.id.tvEmpty);
 
         mrAdapter=new RecyclerAdapter();
         mRvList.setAdapter(mrAdapter);
         mRvList.setLayoutManager(new LinearLayoutManager(getActivity()));
+        mRvList.getItemAnimator().setChangeDuration(0);
+
+
+        mEtSearch.post(new Runnable() {
+            @Override
+            public void run() {
+                updateClearButtonState();
+            }
+        });
+
+        mEtSearch.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                mPresenter.searchTextChanged(charSequence.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
+
+        mIvSearchClear.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mPresenter.clearSearchClicked();
+            }
+        });
+
+
 
     }
 
@@ -168,8 +190,72 @@ public class RecordListFragment extends StandardFragment implements RecordListVi
         mRvList.setVisibility((!show)?View.VISIBLE:View.GONE);
     }
 
+    @Override
+    public void showOptionsDialog(final int num) {
+        AlertDialog.Builder alert = new AlertDialog.Builder(getActivity());
+        alert.setItems(new String[]{getString(R.string.Delete)}, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                mPresenter.removeClicked(num);
+            }
+        });
+        alert.create().show();
+    }
+
+    @Override
+    public void showAlertDelete() {
+        AlertDialog.Builder alert = new AlertDialog.Builder(getActivity());
+        alert.setMessage(getString(mType==TYPE_FAVORITE?R.string.WannaClearFavorite:R.string.WannaClearHistory));
+        alert.setNegativeButton(R.string.Cancel, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+
+            }
+        });
+        alert.setPositiveButton(R.string.Clear, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                mPresenter.clearPositive();
+            }
+        });
+        alert.create().show();
+    }
+
+    @Override
+    public void showEmpty(boolean show) {
+        mTvEmpty.setVisibility(show?View.VISIBLE:View.GONE);
+    }
+
+    @Override
+    public void scrollToPosition(int i) {
+        mRvList.scrollToPosition(i);
+    }
+
+    @Override
+    public void updateClearButtonState() {
+        ((HistoriesFragment)getParentFragment()).updateClearButtonState();
+    }
+
+    @Override
+    public void showSearchClearButton(boolean show) {
+        mIvSearchClear.setVisibility(show?View.VISIBLE:View.GONE);
+    }
+
+    @Override
+    public void clearSearchText() {
+        mEtSearch.setText("");
+    }
+
     public void update() {
         mPresenter.update();
+    }
+
+    public void clearClicked() {
+        mPresenter.clearClicked();
+    }
+
+    public boolean getClearButtonState() {
+        return mPresenter.getClearButtonState();
     }
 
     public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.RecycleViewHolder> {
@@ -184,7 +270,7 @@ public class RecordListFragment extends StandardFragment implements RecordListVi
         @Override
         public void onBindViewHolder(final RecycleViewHolder viewHolder, int i) {
 
-            viewHolder.setViews(mRecordList.get(i), i);
+            viewHolder.setViews(mRecordList.get(i));
 
         }
 
@@ -197,6 +283,7 @@ public class RecordListFragment extends StandardFragment implements RecordListVi
 
         public class RecycleViewHolder extends RecyclerView.ViewHolder{
 
+            private RelativeLayout mRlContent;
             private TextView mTvText, mTvTranslation, mTvDirection;
             private ImageView mIvIcon;
 
@@ -207,10 +294,11 @@ public class RecordListFragment extends StandardFragment implements RecordListVi
                 mTvTranslation=(TextView)itemView.findViewById(R.id.tvTranslation);
                 mTvDirection=(TextView)itemView.findViewById(R.id.tvDir);
                 mIvIcon=(ImageView) itemView.findViewById(R.id.ivIcon);
+                mRlContent=(RelativeLayout) itemView.findViewById(R.id.rlContent);
 
             }
 
-            public void setViews(final Record record, final int i) {
+            public void setViews(final Record record) {
                 mTvText.setText(record.getText());
                 mTvTranslation.setText(record.getTranslation());
                 mTvDirection.setText(record.getDirection());
@@ -221,7 +309,22 @@ public class RecordListFragment extends StandardFragment implements RecordListVi
                 mIvIcon.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        mPresenter.iconClicked(i);
+                        mPresenter.iconClicked(mRecordList.indexOf(record));
+                    }
+                });
+
+                mRlContent.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        mPresenter.singleClick(mRecordList.indexOf(record));
+                    }
+                });
+
+                mRlContent.setOnLongClickListener(new View.OnLongClickListener() {
+                    @Override
+                    public boolean onLongClick(View view) {
+                        mPresenter.longClick(mRecordList.indexOf(record));
+                        return true;
                     }
                 });
             }

@@ -34,4 +34,27 @@ public interface RecordListView extends MvpView {
 
     @StateStrategyType(AddToEndSingleStrategy.class)
     public void showLoading(boolean show);
+
+    @StateStrategyType(OneExecutionStateStrategy.class)
+    void showOptionsDialog(int i);
+
+    @StateStrategyType(OneExecutionStateStrategy.class)
+    void showAlertDelete();
+
+    @StateStrategyType(AddToEndSingleStrategy.class)
+    void showEmpty(boolean show);
+
+    @StateStrategyType(OneExecutionStateStrategy.class)
+    void scrollToPosition(int i);
+
+    @StateStrategyType(OneExecutionStateStrategy.class)
+    void updateClearButtonState();
+
+    @StateStrategyType(AddToEndSingleStrategy.class)
+    void showSearchClearButton(boolean show);
+
+    @StateStrategyType(OneExecutionStateStrategy.class)
+    void clearSearchText();
 }
+
+

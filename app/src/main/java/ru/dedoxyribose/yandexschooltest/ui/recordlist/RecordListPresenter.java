@@ -1,52 +1,29 @@
 package ru.dedoxyribose.yandexschooltest.ui.recordlist;
 
 
-import android.app.Activity;
-import android.content.ClipData;
-import android.content.ClipboardManager;
-import android.content.Intent;
-import android.os.Handler;
-import android.os.Looper;
-import android.support.v7.util.SortedList;
+
 import android.util.Log;
-import android.widget.Toast;
 
 import com.arellomobile.mvp.InjectViewState;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.greenrobot.greendao.async.AsyncOperation;
+import org.greenrobot.greendao.async.AsyncOperationListener;
+import org.greenrobot.greendao.async.AsyncSession;
+import org.greenrobot.greendao.query.QueryBuilder;
+import org.greenrobot.greendao.query.WhereCondition;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import okhttp3.ResponseBody;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import ru.dedoxyribose.yandexschooltest.R;
+import ru.dedoxyribose.yandexschooltest.event.FullReloadNeededEvent;
 import ru.dedoxyribose.yandexschooltest.event.RecordChangedEvent;
-import ru.dedoxyribose.yandexschooltest.model.entity.Lang;
+import ru.dedoxyribose.yandexschooltest.event.SelectRecordEvent;
 import ru.dedoxyribose.yandexschooltest.model.entity.Record;
 import ru.dedoxyribose.yandexschooltest.model.entity.RecordDao;
-import ru.dedoxyribose.yandexschooltest.model.viewmodel.ListItem;
-import ru.dedoxyribose.yandexschooltest.ui.chooselang.ChooseLangActivity;
-import ru.dedoxyribose.yandexschooltest.ui.fullscreen.FullscreenActivity;
 import ru.dedoxyribose.yandexschooltest.ui.standard.StandardMvpPresenter;
-import ru.dedoxyribose.yandexschooltest.ui.translate.TranslateFragment;
-import ru.dedoxyribose.yandexschooltest.ui.translate.TranslateView;
-import ru.dedoxyribose.yandexschooltest.util.RetrofitHelper;
-import ru.dedoxyribose.yandexschooltest.util.Singletone;
-import ru.dedoxyribose.yandexschooltest.util.Utils;
-import ru.yandex.speechkit.Error;
-import ru.yandex.speechkit.Recognizer;
-import ru.yandex.speechkit.Synthesis;
-import ru.yandex.speechkit.Vocalizer;
-import ru.yandex.speechkit.VocalizerListener;
-import ru.yandex.speechkit.gui.RecognizerActivity;
 
 /**
  * Created by Ryan on 27.02.2017.
@@ -54,32 +31,75 @@ import ru.yandex.speechkit.gui.RecognizerActivity;
 @InjectViewState
 public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
 
-    private List<Record> mCurList;
-    private List<Record> mSearchList;
-    private List<Record> mFullList;
+    private List<Record> mRecordList;
 
     private int mType;
+
+    private boolean mIsSearch=false;
+    private boolean mBusy=false;
 
     public void setType(int type) {
         mType=type;
     }
 
+    private int mReqNum=0;
+
     @Override
     protected void onFirstViewAttach() {
         super.onFirstViewAttach();
 
-        mFullList = getDaoSession().getRecordDao().queryBuilder()
+        loadAll();
+
+        EventBus.getDefault().register(this);
+
+    }
+
+    @Override
+    public void attachView(RecordListView view) {
+        super.attachView(view);
+
+    }
+
+    private void loadAll() {
+
+        getViewState().showLoading(true);
+        mBusy=true;
+
+        AsyncSession asyncSession = getDaoSession().startAsyncSession();
+
+        mReqNum++;
+        final int curReqNum=mReqNum;
+
+        asyncSession.setListenerMainThread(new AsyncOperationListener() {
+            @Override
+            public void onAsyncOperationCompleted(AsyncOperation operation) {
+
+                if (curReqNum!=mReqNum) return;
+
+                mIsSearch=false;
+
+                getViewState().showLoading(false);
+
+                mRecordList= (List<Record>) operation.getResult();
+
+                getViewState().showEmpty(mRecordList.size()==0);
+
+                getViewState().setData(mRecordList);
+                getViewState().notifyDataSetChanged();
+
+                mBusy=false;
+
+                getViewState().updateClearButtonState();
+
+            }
+        });
+
+        asyncSession.queryList(getDaoSession().getRecordDao().queryBuilder()
                 .where((mType==RecordListFragment.TYPE_HISTORY)?
                         RecordDao.Properties.InHistory.eq(true)
                         :RecordDao.Properties.InFavorite.eq(true)).orderDesc(
                         (mType==RecordListFragment.TYPE_HISTORY)?RecordDao.Properties.HistoryTime:RecordDao.Properties.FavoriteTime)
-                        .list();
-
-        mCurList=mFullList;
-        getViewState().setData(mFullList);
-        getViewState().notifyDataSetChanged();
-
-        EventBus.getDefault().register(this);
+                        .build());
 
     }
 
@@ -92,7 +112,7 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
 
     public void iconClicked(int i) {
 
-        Record record = mCurList.get(i);
+        Record record = mRecordList.get(i);
 
         if (!record.isInFavorite()) {
             record.setInFavorite(true);
@@ -106,7 +126,7 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
             getDaoSession().insertOrReplace(record);
         else getDaoSession().delete(record);
 
-        getViewState().setData(mCurList);
+        getViewState().setData(mRecordList);
         getViewState().notifyItemChanged(i);
 
         EventBus.getDefault().post(new RecordChangedEvent(record,
@@ -119,13 +139,17 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
 
         Log.d(APP_TAG, TAG+"onRecordChangedEvent");
 
+        if (mBusy) return;
+
+        if (mIsSearch) return;
+
         if ((event.getSender()==RecordChangedEvent.SENDER_HISTORY && mType==RecordListFragment.TYPE_HISTORY) ||
                 (event.getSender()==RecordChangedEvent.SENDER_FAVORITE && mType==RecordListFragment.TYPE_FAVORITE)) return;
 
         boolean found=false;
 
-        for (int i=0; i<mFullList.size(); i++) {
-            Record record=mFullList.get(i);
+        for (int i = 0; i< mRecordList.size(); i++) {
+            Record record= mRecordList.get(i);
 
             if (record.getId().equals(event.getRecord().getId())) {
 
@@ -137,8 +161,8 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
 
                     Log.d(APP_TAG, "gonna replace");
 
-                    mFullList.remove(i);
-                    getViewState().setData(mFullList);
+                    mRecordList.remove(i);
+                    getViewState().setData(mRecordList);
                     getViewState().notifyItemRemoved(i);
                     break;
                 }
@@ -147,25 +171,25 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
 
                 if (mType==RecordListFragment.TYPE_HISTORY) {
                     if (!event.getRecord().isInHistory()) {
-                        mFullList.remove(i);
-                        getViewState().setData(mFullList);
+                        mRecordList.remove(i);
+                        getViewState().setData(mRecordList);
                         getViewState().notifyDataSetChanged();
                     }
                     else {
-                        mFullList.set(i, event.getRecord());
-                        getViewState().setData(mFullList);
+                        mRecordList.set(i, event.getRecord());
+                        getViewState().setData(mRecordList);
                         getViewState().notifyItemChanged(i);
                     }
                 }
                 else {
                     if (!event.getRecord().isInFavorite()) {
-                        mFullList.remove(i);
-                        getViewState().setData(mFullList);
+                        mRecordList.remove(i);
+                        getViewState().setData(mRecordList);
                         getViewState().notifyDataSetChanged();
                     }
                     else {
-                        mFullList.set(i, event.getRecord());
-                        getViewState().setData(mFullList);
+                        mRecordList.set(i, event.getRecord());
+                        getViewState().setData(mRecordList);
                         getViewState().notifyItemChanged(i);
                     }
                 }
@@ -177,19 +201,19 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
         if (!found && event.getRecord().isInFavorite() && mType==RecordListFragment.TYPE_FAVORITE) {
 
             boolean inserted=false;
-            for (int i=0; i<mFullList.size(); i++) {
-                if (mFullList.get(i).getFavoriteTime()<event.getRecord().getFavoriteTime()) {
-                    mFullList.add(i, event.getRecord());
+            for (int i = 0; i< mRecordList.size(); i++) {
+                if (mRecordList.get(i).getFavoriteTime()<event.getRecord().getFavoriteTime()) {
+                    mRecordList.add(i, event.getRecord());
                     inserted=true;
                     break;
                 }
             }
 
             if (!inserted) {
-                mFullList.add(event.getRecord());
+                mRecordList.add(event.getRecord());
             }
 
-            getViewState().setData(mFullList);
+            getViewState().setData(mRecordList);
             getViewState().notifyDataSetChanged();
 
         }
@@ -197,10 +221,10 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
         if (!found && event.getRecord().isInHistory() && mType==RecordListFragment.TYPE_HISTORY) {
 
             boolean inserted=false;
-            for (int i=0; i<mFullList.size(); i++) {
-                if (mFullList.get(i).getHistoryTime()<event.getRecord().getHistoryTime()) {
-                    mFullList.add(i, event.getRecord());
-                    getViewState().setData(mFullList);
+            for (int i = 0; i< mRecordList.size(); i++) {
+                if (mRecordList.get(i).getHistoryTime()<event.getRecord().getHistoryTime()) {
+                    mRecordList.add(i, event.getRecord());
+                    getViewState().setData(mRecordList);
                     getViewState().notifyDataSetChanged();
                     inserted=true;
                     break;
@@ -208,32 +232,278 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
             }
 
             if (!inserted) {
-                mFullList.add(event.getRecord());
+                mRecordList.add(event.getRecord());
             }
 
-            getViewState().setData(mFullList);
+            getViewState().setData(mRecordList);
             getViewState().notifyDataSetChanged();
 
         }
+
+        getViewState().showEmpty(mRecordList.size()==0);
 
     }
 
 
     public void update() {
 
+        if (mIsSearch) {
+            loadAll();
+            getViewState().clearSearchText();
+            return;
+        }
+
         if (mType==RecordListFragment.TYPE_HISTORY) return;
 
-        if (mFullList==null) return;
+        if (mRecordList ==null) return;
 
-        for (int i=0; i<mFullList.size(); i++) {
-            if (!mFullList.get(i).isInFavorite()) {
-                mFullList.remove(i);
+        for (int i = 0; i< mRecordList.size(); i++) {
+            if (!mRecordList.get(i).isInFavorite()) {
+                mRecordList.remove(i);
                 i--;
             }
         }
 
-        mCurList=mFullList;
-        getViewState().setData(mFullList);
+        getViewState().setData(mRecordList);
         getViewState().notifyDataSetChanged();
+        getViewState().showEmpty(mRecordList.size()==0);
+    }
+
+    public void singleClick(int i) {
+        EventBus.getDefault().post(new SelectRecordEvent(mRecordList.get(i)));
+    }
+
+    public void longClick(int num) {
+
+
+        /*AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Важное сообщение!")
+                .setMessage("Покормите кота!")
+                .setCancelable(false)
+                .setNegativeButton("ОК, иду на кухню",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                dialog.cancel();
+                            }
+                        });
+        AlertDialog alert = builder.create();
+        alert.show();*/
+
+        getViewState().showOptionsDialog(num);
+    }
+
+    private void removeItem(int i) {
+
+        Record record=mRecordList.get(i);
+        mRecordList.remove(i);
+        getViewState().setData(mRecordList);
+        getViewState().notifyItemRemoved(i);
+
+        if (mType==RecordListFragment.TYPE_FAVORITE) record.setInFavorite(false);
+        else if (mType==RecordListFragment.TYPE_HISTORY) record.setInHistory(false);
+
+        if (record.isInFavorite() || record.isInHistory())
+            getDaoSession().getRecordDao().insertOrReplace(record);
+        else getDaoSession().getRecordDao().delete(record);
+
+        EventBus.getDefault().post(new RecordChangedEvent(record,
+                mType==RecordListFragment.TYPE_HISTORY?RecordChangedEvent.SENDER_HISTORY:RecordChangedEvent.SENDER_FAVORITE));
+
+        getViewState().showEmpty(mRecordList.size()==0);
+
+        getViewState().updateClearButtonState();
+    }
+
+    public void removeClicked(int num) {
+        removeItem(num);
+    }
+
+    public void clearClicked() {
+        getViewState().showAlertDelete();
+    }
+
+
+    public void clearFirstStep() {
+
+        Log.d(APP_TAG, "clearFirstStep start");
+
+        AsyncSession asyncSession = getDaoSession().startAsyncSession();
+
+        asyncSession.setListenerMainThread(new AsyncOperationListener() {
+            @Override
+            public void onAsyncOperationCompleted(AsyncOperation operation) {
+
+                Log.d(APP_TAG, "half_first_step");
+
+                AsyncSession asyncSession2 = getDaoSession().startAsyncSession();
+
+                asyncSession2.setListenerMainThread(new AsyncOperationListener() {
+                    @Override
+                    public void onAsyncOperationCompleted(AsyncOperation operation) {
+
+                        Log.d(APP_TAG, "first_step finished");
+
+                        clearSecondStep();
+
+                    }
+                });
+
+                asyncSession2.deleteInTx(Record.class, (List<Record>) operation.getResult());
+
+            }
+        });
+
+        asyncSession.queryList(getDaoSession().getRecordDao().queryBuilder().where((mType==RecordListFragment.TYPE_FAVORITE)?
+                RecordDao.Properties.InHistory.eq(false)
+                :RecordDao.Properties.InFavorite.eq(false)).build());
+
+    }
+
+    private void clearSecondStep() {
+
+        AsyncSession asyncSession = getDaoSession().startAsyncSession();
+
+        asyncSession.setListenerMainThread(new AsyncOperationListener() {
+            @Override
+            public void onAsyncOperationCompleted(AsyncOperation operation) {
+
+                List<Record> records = (List<Record>) operation.getResult();
+
+                if (mType==RecordListFragment.TYPE_FAVORITE) {
+                    for (Record record : records) {
+                        record.setInFavorite(false);
+                        record.setFavoriteTime(0);
+                    }
+                }
+                else if (mType==RecordListFragment.TYPE_HISTORY) {
+                    for (Record record : records) {
+                        record.setInHistory(false);
+                        record.setHistoryTime(0);
+                    }
+                }
+
+                AsyncSession asyncSession2 = getDaoSession().startAsyncSession();
+
+                asyncSession2.setListenerMainThread(new AsyncOperationListener() {
+                    @Override
+                    public void onAsyncOperationCompleted(AsyncOperation operation) {
+
+                        mBusy=false;
+                        getViewState().showLoading(false);
+                        getViewState().showEmpty(true);
+
+                        mRecordList=new ArrayList<>();
+                        getViewState().setData(mRecordList);
+                        getViewState().notifyDataSetChanged();
+
+                        EventBus.getDefault().post(new FullReloadNeededEvent(
+                                mType==RecordListFragment.TYPE_HISTORY?RecordChangedEvent.SENDER_HISTORY
+                                        :RecordChangedEvent.SENDER_FAVORITE));
+
+                        getViewState().updateClearButtonState();
+
+                    }
+                });
+
+                asyncSession2.insertOrReplaceInTx(Record.class, records);
+
+            }
+        });
+
+        asyncSession.queryList(getDaoSession().getRecordDao().queryBuilder().build());
+
+    }
+
+    public void clearPositive() {
+
+        if (mBusy) return;
+
+        mBusy=true;
+
+        getViewState().showLoading(true);
+
+        clearFirstStep();
+
+        getViewState().updateClearButtonState();
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onFullReloadNeededEvent(FullReloadNeededEvent event) {
+
+        if ((event.getSender()==RecordChangedEvent.SENDER_HISTORY && mType==RecordListFragment.TYPE_HISTORY) ||
+                (event.getSender()==RecordChangedEvent.SENDER_FAVORITE && mType==RecordListFragment.TYPE_FAVORITE)) return;
+
+        loadAll();
+        getViewState().scrollToPosition(0);
+
+    }
+
+
+    public boolean getClearButtonState() {
+
+        Log.d(APP_TAG, "asked for clear buttn state, type="+mType+" , return="+ (!mBusy && mRecordList!=null && mRecordList.size()>0));
+
+        return (!mBusy && mRecordList!=null && mRecordList.size()>0);
+    }
+
+
+    public void searchTextChanged(String text) {
+        getViewState().showSearchClearButton(text.length()>0);
+
+        if (text.length()==0) loadAll();
+        else {
+            searchFor(text);
+        }
+    }
+
+    private void searchFor(String text) {
+
+        getViewState().showLoading(true);
+        mBusy=true;
+
+        AsyncSession asyncSession = getDaoSession().startAsyncSession();
+
+        mReqNum++;
+        final int curReqNum=mReqNum;
+
+        asyncSession.setListenerMainThread(new AsyncOperationListener() {
+            @Override
+            public void onAsyncOperationCompleted(AsyncOperation operation) {
+
+                if (curReqNum!=mReqNum) return;
+
+                mIsSearch=true;
+
+                getViewState().showLoading(false);
+
+                mRecordList= (List<Record>) operation.getResult();
+
+                getViewState().showEmpty(mRecordList.size()==0);
+
+                getViewState().setData(mRecordList);
+                getViewState().notifyDataSetChanged();
+
+                mBusy=false;
+
+                getViewState().updateClearButtonState();
+
+            }
+        });
+
+        QueryBuilder qb = getDaoSession().getRecordDao().queryBuilder();
+
+        asyncSession.queryList(qb.where(qb.and((mType==RecordListFragment.TYPE_HISTORY)?
+                        RecordDao.Properties.InHistory.eq(true)
+                        :RecordDao.Properties.InFavorite.eq(true),
+                        new WhereCondition.PropertyCondition(RecordDao.Properties.LowText, " LIKE '%"+text.toLowerCase()+"%'"))).orderDesc(
+                        (mType==RecordListFragment.TYPE_HISTORY)?RecordDao.Properties.HistoryTime:RecordDao.Properties.FavoriteTime)
+                        .build());
+
+
+    }
+
+    public void clearSearchClicked() {
+
+        getViewState().clearSearchText();
     }
 }
