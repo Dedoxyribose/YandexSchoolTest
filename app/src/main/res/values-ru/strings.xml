@@ -38,4 +38,15 @@
     <string name="Delete">Удалить</string>
     <string name="Favorite">Избранное</string>
     <string name="History">История</string>
+    <string name="About">О программе</string>
+    <string name="AboutText">Приложение для Школы мобильной разработки Яндекса 2017 Мск. Использует API Яндекс.Словаря, Яндекс.Переводчика и Yandex Mobile Speech SDK.</string>
+    <string name="Cancel">Отмена</string>
+    <string name="Clear">Очистить</string>
+    <string name="ListIsEmpty">Список пуст</string>
+    <string name="ReturnForTranslation">Return для перевода</string>
+    <string name="Settings">Настройки</string>
+    <string name="ShowDictionary">Показывать словарь</string>
+    <string name="SyncTranslation">Синхронный перевод</string>
+    <string name="WannaClearFavorite">Вы уверены, что хотите очистить избранное?</string>
+    <string name="WannaClearHistory">Вы уверены, что хотите очистить историю переводов?</string>
 </resources>

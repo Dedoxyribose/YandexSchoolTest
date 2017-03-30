@@ -27,6 +27,8 @@
 
         <activity android:name=".ui.fullscreen.FullscreenActivity"/>
 
+        <activity android:name=".ui.about.AboutActivity"/>
+
     </application>
 
 </manifest>

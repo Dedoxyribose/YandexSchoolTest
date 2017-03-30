@@ -11,14 +11,23 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/vpPages"
-        android:layout_above="@+id/bnBar"
-        android:layout_below="@+id/appbar" />
+        android:layout_above="@+id/tvDivider" />
 
-    <android.support.design.widget.BottomNavigationView
+    <TextView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="1dp"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:id="@+id/tvDivider"
+        android:background="@color/colorLightGray"
+        android:layout_above="@+id/tabPages" />
+
+    <android.support.design.widget.TabLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
         android:layout_alignParentBottom="true"
-        android:id="@+id/bnBar"
-        app:menu="@menu/bottom_navigation_menu"/>
+        android:id="@+id/tabPages"
+        app:tabMaxWidth="0dp"
+        app:tabGravity="fill"
+        app:tabMode="fixed"/>
 
 </RelativeLayout>

@@ -299,8 +299,15 @@ public class RecordListFragment extends StandardFragment implements RecordListVi
             }
 
             public void setViews(final Record record) {
-                mTvText.setText(record.getText());
-                mTvTranslation.setText(record.getTranslation());
+
+                String text=record.getText();
+                if (text.length()>100) text=text.substring(0,100)+"...";
+                mTvText.setText(text);
+
+                text=record.getTranslation();
+                if (text.length()>100) text=text.substring(0,100)+"...";
+                mTvTranslation.setText(text);
+
                 mTvDirection.setText(record.getDirection());
 
                 mIvIcon.setColorFilter(ContextCompat.getColor(getActivity(),

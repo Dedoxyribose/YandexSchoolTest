@@ -95,7 +95,8 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
                     while (true) {
                         Thread.sleep(200);
 
-                        if (mLastChangeTextTime!=0 && System.currentTimeMillis()-INPUT_TIMEOUT>=mLastChangeTextTime) {
+                        if (mLastChangeTextTime!=0 && System.currentTimeMillis()-INPUT_TIMEOUT>=mLastChangeTextTime
+                                && Singletone.getInstance().isSyncTranslation()) {
                             new Handler(Looper.getMainLooper()).post(new Runnable() {
                                 @Override
                                 public void run() {
@@ -177,12 +178,20 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
     public void returnPressed() {
 
         Log.d(APP_TAG, TAG+"returnPressed");
-        if (mCurText.length()>0) {
 
-            makeFinalCall();
-            getViewState().hideSoftKeyboard();
-            getViewState().clearTextFocus();
+        if (Singletone.getInstance().isReturnTranslate()) {
+            if (mCurText.length()>0) {
+
+                makeFinalCall();
+                getViewState().hideSoftKeyboard();
+                getViewState().clearTextFocus();
+            }
         }
+        else {
+            mCurText=mCurText+"\n";
+            getViewState().setText(mCurText);
+        }
+
     }
 
     private void doMakeCall(final boolean finalCall) {
@@ -193,21 +202,26 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
         final String direction=mLangFrom.getCode()+"-"+mLangTo.getCode();
 
-        RetrofitHelper.getServerApi().lookup(getContext().getString(R.string.dict_key),
-                direction, mCurText, "ru").enqueue(
-                new Callback<Record>() {
-                    @Override
-                    public void onResponse(Call<Record> call, Response<Record> response) {
-                        gotResponse(curReqNum, finalCall,  true, response.isSuccessful(), Utils.extractErrorCode(response),
-                                response.isSuccessful()?response.body():null, direction);
-                    }
+        final boolean noDict=!Singletone.getInstance().isShowDict();
 
-                    @Override
-                    public void onFailure(Call<Record> call, Throwable t) {
-                        gotResponse(curReqNum, finalCall, true, false, 0, null, direction);
-                        if (t!=null) t.printStackTrace();
-                    }
-                });
+        if (!noDict) {
+
+            RetrofitHelper.getServerApi().lookup(getContext().getString(R.string.dict_key),
+                    direction, mCurText, "ru").enqueue(
+                    new Callback<Record>() {
+                        @Override
+                        public void onResponse(Call<Record> call, Response<Record> response) {
+                            gotResponse(curReqNum, finalCall,  true, response.isSuccessful(), Utils.extractErrorCode(response),
+                                    response.isSuccessful()?response.body():null, direction, false);
+                        }
+
+                        @Override
+                        public void onFailure(Call<Record> call, Throwable t) {
+                            gotResponse(curReqNum, finalCall, true, false, 0, null, direction, false);
+                            if (t!=null) t.printStackTrace();
+                        }
+                    });
+        }
 
         RetrofitHelper.getServerApi().translate(getContext().getString(R.string.trans_key),
                 direction, mCurText).enqueue(
@@ -215,12 +229,12 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
                     @Override
                     public void onResponse(Call<Record> call, Response<Record> response) {
                         gotResponse(curReqNum, finalCall, false, response.isSuccessful(), Utils.extractErrorCode(response),
-                                response.isSuccessful()?response.body():null, direction);
+                                response.isSuccessful()?response.body():null, direction, noDict);
                     }
 
                     @Override
                     public void onFailure(Call<Record> call, Throwable t) {
-                        gotResponse(curReqNum, finalCall, false, false, 0, null, direction);
+                        gotResponse(curReqNum, finalCall, false, false, 0, null, direction, noDict);
                         if (t!=null) t.printStackTrace();
                     }
                 });
@@ -360,7 +374,8 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
     }
 
 
-    public void gotResponse(int reqNum, boolean finalCall, boolean dictionary, boolean successful, int errorCode, Record record, String direction) {
+    public void gotResponse(int reqNum, boolean finalCall, boolean dictionary, boolean successful,
+                            int errorCode, Record record, String direction, boolean noDict) {
 
         Log.d(APP_TAG, TAG+"gotResponse, successfull="+successful+" errorCode="+errorCode);
         if (reqNum!=mRequestNum) return;
@@ -398,7 +413,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
                 mTranslationRecord=record;
             }
 
-            if (mGotDictionaryResponse && mGotTranslationResponse) {
+            if ((mGotDictionaryResponse && mGotTranslationResponse) || (mGotTranslationResponse && noDict)) {
 
                 getViewState().showLoading(false);
 

@@ -6,7 +6,9 @@ import android.os.Bundle;
 import android.support.annotation.IdRes;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
+import android.support.design.widget.TabLayout;
 import android.support.v13.app.FragmentPagerAdapter;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.view.menu.MenuView;
 import android.util.Log;
@@ -15,6 +17,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
 import com.arellomobile.mvp.presenter.InjectPresenter;
 
@@ -26,6 +29,7 @@ import ru.dedoxyribose.yandexschooltest.R;
 import ru.dedoxyribose.yandexschooltest.event.SelectRecordEvent;
 import ru.dedoxyribose.yandexschooltest.model.entity.Record;
 import ru.dedoxyribose.yandexschooltest.ui.histories.HistoriesFragment;
+import ru.dedoxyribose.yandexschooltest.ui.settings.SettingsFragment;
 import ru.dedoxyribose.yandexschooltest.ui.standard.StandardActivity;
 import ru.dedoxyribose.yandexschooltest.ui.translate.TranslateFragment;
 import ru.dedoxyribose.yandexschooltest.util.Singletone;
@@ -38,7 +42,7 @@ public class MainActivity extends StandardActivity implements MainView {
     MainPresenter mPresenter;
 
     private NonSwipeableViewPager mViewPager;
-    private BottomNavigationView mBottomNavigationView;
+    private TabLayout mTabLayout;
 
     private SectionsPagerAdapter mSectionPagerAdapter;
 
@@ -48,39 +52,12 @@ public class MainActivity extends StandardActivity implements MainView {
         setContentView(R.layout.activity_main);
 
         mViewPager = (NonSwipeableViewPager) findViewById(R.id.vpPages);
-        mBottomNavigationView = (BottomNavigationView) findViewById(R.id.bnBar);
+        mTabLayout = (TabLayout) findViewById(R.id.tabPages);
 
         mSectionPagerAdapter = new SectionsPagerAdapter(getFragmentManager());
         mViewPager.setAdapter(mSectionPagerAdapter);
+        mTabLayout.setupWithViewPager(mViewPager);
 
-        mBottomNavigationView.setOnNavigationItemSelectedListener(
-                new BottomNavigationView.OnNavigationItemSelectedListener() {
-                    @Override
-                    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                        switch (item.getItemId()) {
-                            case R.id.action_search:
-                                mViewPager.setCurrentItem(0);
-                                break;
-                            case R.id.action_history:
-                                mViewPager.setCurrentItem(1);
-                                break;
-                            case R.id.action_settings:
-                                mViewPager.setCurrentItem(2);
-                                break;
-                        }
-                        return true;
-                    }
-                });
-
-        try{
-            removeTextLabel(mBottomNavigationView, R.id.action_search);
-            removeTextLabel(mBottomNavigationView, R.id.action_history);
-            removeTextLabel(mBottomNavigationView, R.id.action_settings);
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
 
         mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
@@ -95,6 +72,12 @@ public class MainActivity extends StandardActivity implements MainView {
                         ((HistoriesFragment)mSectionPagerAdapter.getRegisteredFragment(1)).focusLost();
                     }
                 }
+
+                for (int i=0; i<3; i++) {
+                    ((ImageView)mTabLayout.getTabAt(i).getCustomView().findViewById(R.id.ivIcon)).setColorFilter(
+                            ContextCompat.getColor(getActivity(), (i==position)?R.color.colorBlackText:R.color.colorGrayPic));
+                }
+
             }
 
             @Override
@@ -103,23 +86,23 @@ public class MainActivity extends StandardActivity implements MainView {
             }
         });
 
-    }
+        ImageView iv1=new ImageView(getApplicationContext());
+        iv1.setImageResource(R.drawable.ic_translate_black_24dp);
+        iv1.setId(R.id.ivIcon);
+        mTabLayout.getTabAt(0).setCustomView(iv1);
 
-    private static void removeTextLabel(@NonNull BottomNavigationView bottomNavigationView, @IdRes int menuItemId) {
-        View view = bottomNavigationView.findViewById(menuItemId);
-        if (view == null) return;
-        if (view instanceof MenuView.ItemView) {
-            ViewGroup viewGroup = (ViewGroup) view;
-            int padding = 0;
-            for (int i = 0; i < viewGroup.getChildCount(); i++) {
-                View v = viewGroup.getChildAt(i);
-                if (v instanceof ViewGroup) {
-                    padding = v.getHeight();
-                    viewGroup.removeViewAt(i);
-                }
-            }
-            viewGroup.setPadding(view.getPaddingLeft(), (viewGroup.getPaddingTop() + padding) / 2, view.getPaddingRight(), view.getPaddingBottom());
-        }
+        ImageView iv2=new ImageView(getApplicationContext());
+        iv2.setImageResource(R.drawable.ic_bookmark_black_24dp);
+        iv2.setId(R.id.ivIcon);
+        iv2.setColorFilter(ContextCompat.getColor(getActivity(), R.color.colorGrayPic));
+        mTabLayout.getTabAt(1).setCustomView(iv2);
+
+        ImageView iv3=new ImageView(getApplicationContext());
+        iv3.setImageResource(R.drawable.ic_settings_black_24dp);
+        iv3.setId(R.id.ivIcon);
+        iv3.setColorFilter(ContextCompat.getColor(getActivity(), R.color.colorGrayPic));
+        mTabLayout.getTabAt(2).setCustomView(iv3);
+
     }
 
 
@@ -140,7 +123,7 @@ public class MainActivity extends StandardActivity implements MainView {
                 case 1:
                     return HistoriesFragment.newInstance();
                 default:
-                    return TranslateFragment.newInstance();
+                    return SettingsFragment.newInstance();
             }
 
         }
@@ -181,20 +164,12 @@ public class MainActivity extends StandardActivity implements MainView {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-
-        Log.d("aa", "onBackPressed");
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onSelectRecordEvent(SelectRecordEvent selectRecordEvent) {
 
         mViewPager.setCurrentItem(0);
-
-        Menu menu = mBottomNavigationView.getMenu();
-        for (int i = 0, size = menu.size(); i < size; i++) {
-            MenuItem item = menu.getItem(i);
-            item.setChecked(i==1);
-        }
     }
 
     @Override

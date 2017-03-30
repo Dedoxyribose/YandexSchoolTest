@@ -49,19 +49,22 @@ public class FullscreenActivity extends StandardActivity {
 
         if (text==null) text="";
 
-        mRlContainer.measure(0,0);
+        mTvTextScrollable.setText(text);
 
-        Log.d(TAG, "got="+Utils.calculateTextViewHeight(getActivity(), text, 16,
-                Utils.getScreenWidth(getActivity())-Utils.dpToPx(20), Typeface.DEFAULT, 0));
-
-        Log.d(TAG, "height="+mRlContainer.getMeasuredHeight());
-
-        if (Utils.calculateTextViewHeight(getActivity(), text, 16,
-                Utils.getScreenWidth(getActivity())-Utils.dpToPx(20), Typeface.DEFAULT, 0)>mRlContainer.getMeasuredHeight()) {
-            Log.d(TAG, "in");
-            mTvTextScrollable.setText(text);
-        }
-        else  mTvText.setText(text);
+        final String finalText = text;
+        mTvTextScrollable.post(new Runnable() {
+            @Override
+            public void run() {
+                if (mTvTextScrollable.getHeight()>mRlContainer.getHeight()) {
+                    mTvTextScrollable.setVisibility(View.VISIBLE);
+                }
+                else {
+                    mTvTextScrollable.setVisibility(View.GONE);
+                    mTvText.setVisibility(View.VISIBLE);
+                    mTvText.setText(finalText);
+                }
+            }
+        });
 
     }
 }

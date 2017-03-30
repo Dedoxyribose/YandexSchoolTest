@@ -33,6 +33,9 @@ public class Singletone {
     private List<Lang> mLangs;
     private String mLastLangFrom;
     private String mLastLangTo;
+    private boolean mSyncTranslation;
+    private boolean mShowDict;
+    private boolean mReturnTranslate;
 
     private Singletone(Context context){
 
@@ -115,6 +118,9 @@ public class Singletone {
         SharedPreferences sPref = mContext.getSharedPreferences("settings", Activity.MODE_PRIVATE);
         mLastLangFrom = sPref.getString("lastLangFrom", "ru");
         mLastLangTo = sPref.getString("lastLangTo", "en");
+        mSyncTranslation = sPref.getBoolean("syncTranslation", true);
+        mShowDict = sPref.getBoolean("showDict", true);
+        mReturnTranslate = sPref.getBoolean("returnTranslate", true);
     }
 
     public void saveSettings() {
@@ -124,6 +130,9 @@ public class Singletone {
         SharedPreferences.Editor ed = sPref.edit();
         ed.putString("lastLangFrom", mLastLangFrom);
         ed.putString("lastLangTo", mLastLangTo);
+        ed.putBoolean("syncTranslation", mSyncTranslation);
+        ed.putBoolean("showDict", mShowDict);
+        ed.putBoolean("returnTranslate", mReturnTranslate);
         ed.commit();
     }
 
@@ -150,5 +159,29 @@ public class Singletone {
 
     public void setLastLangTo(String lastLangTo) {
         this.mLastLangTo = lastLangTo;
+    }
+
+    public boolean isSyncTranslation() {
+        return mSyncTranslation;
+    }
+
+    public boolean isShowDict() {
+        return mShowDict;
+    }
+
+    public boolean isReturnTranslate() {
+        return mReturnTranslate;
+    }
+
+    public void setSyncTranslation(boolean syncTranslation) {
+        this.mSyncTranslation = syncTranslation;
+    }
+
+    public void setShowDict(boolean showDict) {
+        this.mShowDict = showDict;
+    }
+
+    public void setReturnTranslate(boolean returnTranslate) {
+        this.mReturnTranslate = returnTranslate;
     }
 }
