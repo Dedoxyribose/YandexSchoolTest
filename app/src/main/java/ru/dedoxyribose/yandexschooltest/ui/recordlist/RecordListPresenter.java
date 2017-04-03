@@ -31,12 +31,15 @@ import ru.dedoxyribose.yandexschooltest.ui.standard.StandardMvpPresenter;
 @InjectViewState
 public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
 
-    private List<Record> mRecordList;
+    public static final int MAX_PER_PAGE=10000;
+
+    private List<Record> mRecordList=new ArrayList<>();
 
     private int mType;
 
     private boolean mIsSearch=false;
     private boolean mBusy=false;
+    private boolean mNothingToPaginate=false;
 
     public void setType(int type) {
         mType=type;
@@ -48,7 +51,7 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
     protected void onFirstViewAttach() {
         super.onFirstViewAttach();
 
-        loadAll();
+        loadAll(0);
 
         EventBus.getDefault().register(this);
 
@@ -60,9 +63,12 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
 
     }
 
-    private void loadAll() {
+    private void loadAll(long prevMin) {
 
-        getViewState().showLoading(true);
+        Log.d(APP_TAG, TAG+" loadAll, prevMin="+prevMin);
+
+        if (prevMin==0)
+            getViewState().showLoading(true);
         mBusy=true;
 
         AsyncSession asyncSession = getDaoSession().startAsyncSession();
@@ -70,9 +76,17 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
         mReqNum++;
         final int curReqNum=mReqNum;
 
+        if (prevMin==0) {
+            prevMin=Long.MAX_VALUE;
+            mRecordList.clear();
+            mNothingToPaginate=false;
+        }
+
         asyncSession.setListenerMainThread(new AsyncOperationListener() {
             @Override
             public void onAsyncOperationCompleted(AsyncOperation operation) {
+
+                Log.d(APP_TAG, TAG+" loadAll async completed");
 
                 if (curReqNum!=mReqNum) return;
 
@@ -80,7 +94,27 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
 
                 getViewState().showLoading(false);
 
-                mRecordList= (List<Record>) operation.getResult();
+                List <Record> newRecords=(List<Record>) operation.getResult();
+
+                if (newRecords.size()==0) mNothingToPaginate=true;
+                else {
+                    int oldSize=mRecordList.size();
+
+                    for (int i=0; i<newRecords.size(); i++) {
+                        mRecordList.add(null);
+                    }
+
+                    for (int i=oldSize-1; i>=0; i--) {
+                        int newPos=i+newRecords.size();
+                        mRecordList.set(newPos, mRecordList.get(i));
+                    }
+
+                    for (int i=0; i<newRecords.size(); i++) {
+
+                        mRecordList.set(i, newRecords.get(newRecords.size()-i-1));
+                    }
+                }
+
 
                 getViewState().showEmpty(mRecordList.size()==0);
 
@@ -94,12 +128,17 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
             }
         });
 
-        asyncSession.queryList(getDaoSession().getRecordDao().queryBuilder()
-                .where((mType==RecordListFragment.TYPE_HISTORY)?
+        QueryBuilder qb = getDaoSession().getRecordDao().queryBuilder();
+
+        asyncSession.queryList(qb.where(
+                qb.and((mType==RecordListFragment.TYPE_HISTORY)?
                         RecordDao.Properties.InHistory.eq(true)
-                        :RecordDao.Properties.InFavorite.eq(true)).orderDesc(
-                        (mType==RecordListFragment.TYPE_HISTORY)?RecordDao.Properties.HistoryTime:RecordDao.Properties.FavoriteTime)
-                        .build());
+                        :RecordDao.Properties.InFavorite.eq(true),
+                        (mType==RecordListFragment.TYPE_HISTORY)?RecordDao.Properties.HistoryTime.lt(prevMin):
+                                                                 RecordDao.Properties.FavoriteTime.lt(prevMin)))
+                .orderDesc((mType==RecordListFragment.TYPE_HISTORY)?RecordDao.Properties.HistoryTime:RecordDao.Properties.FavoriteTime)
+                .limit(MAX_PER_PAGE)
+                .build());
 
     }
 
@@ -201,16 +240,16 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
         if (!found && event.getRecord().isInFavorite() && mType==RecordListFragment.TYPE_FAVORITE) {
 
             boolean inserted=false;
-            for (int i = 0; i< mRecordList.size(); i++) {
+            for (int i = mRecordList.size()-1; i>=0; i--) {
                 if (mRecordList.get(i).getFavoriteTime()<event.getRecord().getFavoriteTime()) {
-                    mRecordList.add(i, event.getRecord());
+                    mRecordList.add(i+1, event.getRecord());
                     inserted=true;
                     break;
                 }
             }
 
             if (!inserted) {
-                mRecordList.add(event.getRecord());
+                mNothingToPaginate=false;
             }
 
             getViewState().setData(mRecordList);
@@ -221,18 +260,16 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
         if (!found && event.getRecord().isInHistory() && mType==RecordListFragment.TYPE_HISTORY) {
 
             boolean inserted=false;
-            for (int i = 0; i< mRecordList.size(); i++) {
+            for (int i = mRecordList.size()-1; i>=0; i--) {
                 if (mRecordList.get(i).getHistoryTime()<event.getRecord().getHistoryTime()) {
-                    mRecordList.add(i, event.getRecord());
-                    getViewState().setData(mRecordList);
-                    getViewState().notifyDataSetChanged();
+                    mRecordList.add(i+1, event.getRecord());
                     inserted=true;
                     break;
                 }
             }
 
             if (!inserted) {
-                mRecordList.add(event.getRecord());
+                mNothingToPaginate=false;
             }
 
             getViewState().setData(mRecordList);
@@ -247,8 +284,10 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
 
     public void update() {
 
+        Log.d(APP_TAG, TAG+"update()");
+
         if (mIsSearch) {
-            loadAll();
+            loadAll(0);
             getViewState().clearSearchText();
             return;
         }
@@ -274,20 +313,6 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
     }
 
     public void longClick(int num) {
-
-
-        /*AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-        builder.setTitle("Важное сообщение!")
-                .setMessage("Покормите кота!")
-                .setCancelable(false)
-                .setNegativeButton("ОК, иду на кухню",
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int id) {
-                                dialog.cancel();
-                            }
-                        });
-        AlertDialog alert = builder.create();
-        alert.show();*/
 
         getViewState().showOptionsDialog(num);
     }
@@ -433,7 +458,8 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
         if ((event.getSender()==RecordChangedEvent.SENDER_HISTORY && mType==RecordListFragment.TYPE_HISTORY) ||
                 (event.getSender()==RecordChangedEvent.SENDER_FAVORITE && mType==RecordListFragment.TYPE_FAVORITE)) return;
 
-        loadAll();
+        Log.d(APP_TAG, TAG+"onFullReloadNeededEvent()");
+        loadAll(0);
         getViewState().scrollToPosition(0);
 
     }
@@ -448,9 +474,12 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
 
 
     public void searchTextChanged(String text) {
+
+        Log.d(APP_TAG, TAG+"searchTextChanged()");
+
         getViewState().showSearchClearButton(text.length()>0);
 
-        if (text.length()==0) loadAll();
+        if (text.length()==0) loadAll(0);
         else {
             searchFor(text);
         }
@@ -505,5 +534,26 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
     public void clearSearchClicked() {
 
         getViewState().clearSearchText();
+    }
+
+    public void onEndReached() {
+
+        Log.d(APP_TAG, TAG+"onEndReached");
+
+        if (mBusy || mNothingToPaginate || mIsSearch) return;
+
+        Log.d(APP_TAG, TAG+"and can load");
+
+        long prevMin=0;
+        if (mRecordList.size()>0) {
+
+            Log.d(APP_TAG, TAG+"mRecordList.get(0).getFavoriteTime()="+mRecordList.get(0).getFavoriteTime());
+            prevMin=((mType==RecordListFragment.TYPE_HISTORY)?
+                    mRecordList.get(0).getHistoryTime():mRecordList.get(0).getFavoriteTime());
+        }
+
+
+        loadAll(prevMin);
+
     }
 }

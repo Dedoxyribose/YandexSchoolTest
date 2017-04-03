@@ -10,6 +10,7 @@ import android.support.v13.app.FragmentPagerAdapter;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.SwitchCompat;
+import android.util.Log;
 import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,7 +19,11 @@ import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import ru.dedoxyribose.yandexschooltest.R;
+import ru.dedoxyribose.yandexschooltest.model.entity.Record;
 import ru.dedoxyribose.yandexschooltest.ui.about.AboutActivity;
 import ru.dedoxyribose.yandexschooltest.ui.recordlist.RecordListFragment;
 import ru.dedoxyribose.yandexschooltest.ui.standard.StandardFragment;
@@ -32,6 +37,7 @@ public class SettingsFragment extends StandardFragment  {
     private SwitchCompat msReturn;
 
     private TextView mTvAbout;
+    private TextView mTvTest;
 
     public SettingsFragment() {
         // Required empty public constructor
@@ -74,6 +80,7 @@ public class SettingsFragment extends StandardFragment  {
         super.onViewCreated(view, savedInstanceState);
 
         mTvAbout=(TextView) view.findViewById(R.id.tvAbout);
+        mTvTest=(TextView) view.findViewById(R.id.tvTest);
 
         msSync=(SwitchCompat) view.findViewById(R.id.sSync);
         msDict=(SwitchCompat) view.findViewById(R.id.sDict);
@@ -112,6 +119,29 @@ public class SettingsFragment extends StandardFragment  {
             public void onClick(View view) {
                 Intent intent = new Intent(getActivity(), AboutActivity.class);
                 startActivity(intent);
+            }
+        });
+
+        mTvTest.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                List<Record> list = new ArrayList<>();
+                long time=System.currentTimeMillis()-1000000;
+
+                for (int i=0; i<10000; i++) {
+                    Log.d("YST", ""+i);
+                    Record record=new Record();
+                    record.setText(""+i);
+                    record.setTranslation("tr "+i);
+                    record.setDirection("en-ru");
+                    record.setInHistory(true);
+                    record.setHistoryTime(time+i);
+                    list.add(record);
+                }
+
+                getDaoSession().getRecordDao().insertInTx(list);
+
             }
         });
 

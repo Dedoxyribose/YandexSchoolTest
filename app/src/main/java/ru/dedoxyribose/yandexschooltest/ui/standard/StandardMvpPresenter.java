@@ -16,7 +16,7 @@ import ru.dedoxyribose.yandexschooltest.util.Utils;
 public class StandardMvpPresenter<MvpView extends com.arellomobile.mvp.MvpView> extends MvpPresenter<MvpView> {
 
     protected static String APP_TAG= Utils.getAppTag();
-    protected static String TAG;
+    protected String TAG;
     private DaoSession mDaoSession;
 
     public StandardMvpPresenter() {

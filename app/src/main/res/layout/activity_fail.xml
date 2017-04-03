@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:autofit="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/rlContainer">
+
+        <TextView
+            android:id="@+id/tvText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_centerInParent="true"
+            android:layout_margin="10dp"
+            android:gravity="center_vertical|center_horizontal"
+            android:maxLines="100"
+            android:padding="15dp"
+            android:text="@string/ApplicationUnavailable"
+            android:textColor="@color/colorBlackText"
+            android:textSize="18dp"
+            android:visibility="visible" />
+    </RelativeLayout>
+
+</LinearLayout>

@@ -36,6 +36,7 @@ public class Singletone {
     private boolean mSyncTranslation;
     private boolean mShowDict;
     private boolean mReturnTranslate;
+    private String mLastText;
 
     private Singletone(Context context){
 
@@ -121,6 +122,7 @@ public class Singletone {
         mSyncTranslation = sPref.getBoolean("syncTranslation", true);
         mShowDict = sPref.getBoolean("showDict", true);
         mReturnTranslate = sPref.getBoolean("returnTranslate", true);
+        mLastText = sPref.getString("lastText", "");
     }
 
     public void saveSettings() {
@@ -133,13 +135,9 @@ public class Singletone {
         ed.putBoolean("syncTranslation", mSyncTranslation);
         ed.putBoolean("showDict", mShowDict);
         ed.putBoolean("returnTranslate", mReturnTranslate);
+        ed.putString("lastText", mLastText);
         ed.commit();
     }
-
-
-
-
-
 
 
     //--------------
@@ -183,5 +181,13 @@ public class Singletone {
 
     public void setReturnTranslate(boolean returnTranslate) {
         this.mReturnTranslate = returnTranslate;
+    }
+
+    public String getLastText() {
+        return mLastText;
+    }
+
+    public void setLastText(String lastText) {
+        this.mLastText = lastText;
     }
 }

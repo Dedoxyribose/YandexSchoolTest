@@ -71,4 +71,7 @@ public interface TranslateView extends MvpView {
     @StateStrategyType(AddToEndSingleStrategy.class)
     public void setFavoriteOn(boolean on);
 
+    @StateStrategyType(OneExecutionStateStrategy.class)
+    public void toFailActivity();
+
 }

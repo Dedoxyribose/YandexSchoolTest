@@ -49,4 +49,5 @@
     <string name="SyncTranslation">Синхронный перевод</string>
     <string name="WannaClearFavorite">Вы уверены, что хотите очистить избранное?</string>
     <string name="WannaClearHistory">Вы уверены, что хотите очистить историю переводов?</string>
+    <string name="ApplicationUnavailable">К сожалению, приложение сейчас недоступно</string>
 </resources>

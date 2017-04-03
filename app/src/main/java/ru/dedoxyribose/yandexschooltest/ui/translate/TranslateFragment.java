@@ -45,6 +45,7 @@ import ru.dedoxyribose.yandexschooltest.model.viewmodel.DefTitle;
 import ru.dedoxyribose.yandexschooltest.model.viewmodel.ExItem;
 import ru.dedoxyribose.yandexschooltest.model.viewmodel.ListItem;
 import ru.dedoxyribose.yandexschooltest.model.viewmodel.TrItem;
+import ru.dedoxyribose.yandexschooltest.ui.fail.FailActivity;
 import ru.dedoxyribose.yandexschooltest.ui.standard.StandardFragment;
 import ru.dedoxyribose.yandexschooltest.util.Utils;
 import ru.dedoxyribose.yandexschooltest.widget.EditTextMultilineDone;
@@ -393,6 +394,14 @@ public class TranslateFragment extends StandardFragment implements TranslateView
     }
 
     @Override
+    public void toFailActivity() {
+        Intent intent=new Intent(getActivity(), FailActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+        getActivity().finish();
+    }
+
+    @Override
     public void setDefData(List<ListItem> list) {
         mDefList=list;
         mrAdapter.notifyDataSetChanged();
@@ -402,6 +411,7 @@ public class TranslateFragment extends StandardFragment implements TranslateView
     @Override
     public void setText(String text) {
         mEtText.setText(text);
+        if (text.length()>0) mEtText.setSelection(text.length());
     }
 
     @Override

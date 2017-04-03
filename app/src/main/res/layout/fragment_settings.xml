@@ -123,6 +123,20 @@
             android:background="@drawable/lang_item_back" />
 
         <TextView
+            android:id="@+id/tvTest"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/lang_item_back"
+            android:paddingBottom="15dp"
+            android:paddingLeft="15dp"
+            android:paddingRight="10dp"
+            android:paddingTop="15dp"
+            android:text="Test"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textColor="@color/colorBlackText"
+            android:textSize="17sp" />
+
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:textAppearance="?android:attr/textAppearanceMedium"

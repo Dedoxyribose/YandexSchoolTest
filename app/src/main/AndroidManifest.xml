@@ -29,6 +29,8 @@
 
         <activity android:name=".ui.about.AboutActivity"/>
 
+        <activity android:name=".ui.fail.FailActivity"/>
+
     </application>
 
 </manifest>

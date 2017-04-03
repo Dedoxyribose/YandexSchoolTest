@@ -51,7 +51,8 @@
     <string name="ReturnForTranslation">Return for translation</string>
     <string name="About">About</string>
     <string name="AboutText">An application for Yandex Mobile School 2017 Msk. It uses Yandex Translation API, Yandex Dictionary API and Yandex Mobile Speech SDK.</string>
-    <string name="version" translatable="false">1.0.0</string>
+    <string name="version" translatable="false">v 1.0.0</string>
     <string name="createdby" translatable="false">created by Dedoxyribose (Bug Light, whatever)</string>
     <string name="copyright" translatable="false">© BugLight, 2017</string>
+    <string name="ApplicationUnavailable">Sorry, unfortunately application is now unavailable</string>
 </resources>

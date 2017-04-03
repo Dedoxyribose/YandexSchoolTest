@@ -19,6 +19,7 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
 
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -51,6 +52,7 @@ public class RecordListFragment extends StandardFragment implements RecordListVi
     private ImageView mIvSearchClear;
     private MaterialProgressBar mPbLoad;
     private RecyclerView mRvList;
+    private LinearLayoutManager mLayoutManager;
 
     private RecyclerAdapter mrAdapter;
 
@@ -120,7 +122,8 @@ public class RecordListFragment extends StandardFragment implements RecordListVi
 
         mrAdapter=new RecyclerAdapter();
         mRvList.setAdapter(mrAdapter);
-        mRvList.setLayoutManager(new LinearLayoutManager(getActivity()));
+        mLayoutManager = new LinearLayoutManager(getActivity());
+        mRvList.setLayoutManager(mLayoutManager);
         mRvList.getItemAnimator().setChangeDuration(0);
 
 
@@ -155,6 +158,19 @@ public class RecordListFragment extends StandardFragment implements RecordListVi
             }
         });
 
+        mRvList.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+
+                if (mLayoutManager.findLastCompletelyVisibleItemPosition()>=mrAdapter.getItemCount()-RecordListPresenter.MAX_PER_PAGE/3)
+                {
+                    mPresenter.onEndReached();
+                }
+
+            }
+        });
+
 
 
     }
@@ -171,17 +187,17 @@ public class RecordListFragment extends StandardFragment implements RecordListVi
 
     @Override
     public void notifyItemChanged(int i) {
-        mrAdapter.notifyItemChanged(i);
+        mrAdapter.notifyItemChanged(mRecordList.size()-1-i);
     }
 
     @Override
     public void notifyItemRemoved(int i) {
-        mrAdapter.notifyItemRemoved(i);
+        mrAdapter.notifyItemRemoved(mRecordList.size()-1-i);
     }
 
     @Override
     public void notifyItemInserted(int i) {
-        mrAdapter.notifyItemInserted(i);
+        mrAdapter.notifyItemInserted(mRecordList.size()-1-i);
     }
 
     @Override
@@ -270,7 +286,7 @@ public class RecordListFragment extends StandardFragment implements RecordListVi
         @Override
         public void onBindViewHolder(final RecycleViewHolder viewHolder, int i) {
 
-            viewHolder.setViews(mRecordList.get(i));
+            viewHolder.setViews(mRecordList.get(mRecordList.size()-i-1));
 
         }
 
