@@ -7,6 +7,7 @@ buildscript {
     ext.okhttp_version = '3.4.1'
     ext.gson_version = '2.4'
     ext.greendao_version = '3.2.0'
+    ext.espresso_version = '2.2.1'
     repositories {
         jcenter()
         mavenCentral()

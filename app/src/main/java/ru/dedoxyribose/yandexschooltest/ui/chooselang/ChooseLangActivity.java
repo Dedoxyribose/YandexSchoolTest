@@ -126,7 +126,7 @@ public class ChooseLangActivity extends StandardActivity implements ChooseLangVi
         public void onBindViewHolder(final RecycleViewHolder viewHolder, int i) {
 
             if (i==0 && mShowDetermineLang){
-                viewHolder.setViewsForLang(null, false);
+                viewHolder.setViewsForLang(null, false, false);
                 return;
             }
 
@@ -143,14 +143,14 @@ public class ChooseLangActivity extends StandardActivity implements ChooseLangVi
                     return;
                 }
                 if (i<mRecentLangs.size()+1) {
-                    viewHolder.setViewsForLang(mRecentLangs.get(i-1), false);
+                    viewHolder.setViewsForLang(mRecentLangs.get(i-1), false, true);
                     return;
                 }
                 i=i-mRecentLangs.size()-2;
 
             }
 
-            viewHolder.setViewsForLang(mAllLangs.get(i), mCurLangPos==i);
+            viewHolder.setViewsForLang(mAllLangs.get(i), mCurLangPos==i, false);
 
         }
 
@@ -166,6 +166,12 @@ public class ChooseLangActivity extends StandardActivity implements ChooseLangVi
             private ImageView mIvChecked;
             private RelativeLayout mRlContent;
 
+            private boolean mRecent;
+
+            public boolean isLang(String title) {
+                return (mTvName.getText().equals(title) && !mRecent);
+            }
+
             public RecycleViewHolder(View itemView) {
                 super(itemView);
 
@@ -179,7 +185,9 @@ public class ChooseLangActivity extends StandardActivity implements ChooseLangVi
                 mTvName.setText(name);
             }
 
-            public void setViewsForLang(final Lang lang, boolean selected) {
+            public void setViewsForLang(final Lang lang, boolean selected, boolean recent) {
+
+                mRecent=recent;
 
                 if (lang!=null)
                     mTvName.setText(lang.getName());

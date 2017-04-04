@@ -74,4 +74,10 @@ public interface TranslateView extends MvpView {
     @StateStrategyType(OneExecutionStateStrategy.class)
     public void toFailActivity();
 
+    @StateStrategyType(OneExecutionStateStrategy.class)
+    public void incrementIdling();
+
+    @StateStrategyType(OneExecutionStateStrategy.class)
+    public void decrementIdling();
+
 }

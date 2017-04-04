@@ -46,6 +46,7 @@ import ru.dedoxyribose.yandexschooltest.model.viewmodel.ExItem;
 import ru.dedoxyribose.yandexschooltest.model.viewmodel.ListItem;
 import ru.dedoxyribose.yandexschooltest.model.viewmodel.TrItem;
 import ru.dedoxyribose.yandexschooltest.ui.fail.FailActivity;
+import ru.dedoxyribose.yandexschooltest.ui.main.MainActivity;
 import ru.dedoxyribose.yandexschooltest.ui.standard.StandardFragment;
 import ru.dedoxyribose.yandexschooltest.util.Utils;
 import ru.dedoxyribose.yandexschooltest.widget.EditTextMultilineDone;
@@ -377,9 +378,14 @@ public class TranslateFragment extends StandardFragment implements TranslateView
         mIvShare.setEnabled(enabled);
         mIvBig.setEnabled(enabled);
 
-        if (!mAreButtonsEnabled)
+        if (!mAreButtonsEnabled) {
             mIvFavorite.setColorFilter(ContextCompat.getColor(getActivity(), R.color.colorLightGray));
-        else  mIvFavorite.setColorFilter(ContextCompat.getColor(getActivity(), mIsFavorite?R.color.colorAccent:R.color.colorGrayPic));
+            mIvFavorite.setContentDescription("off");
+        }
+        else  {
+            mIvFavorite.setColorFilter(ContextCompat.getColor(getActivity(), mIsFavorite?R.color.colorAccent:R.color.colorGrayPic));
+            mIvFavorite.setContentDescription(mIsFavorite?"on":"off");
+        }
     }
 
     @Override
@@ -388,9 +394,14 @@ public class TranslateFragment extends StandardFragment implements TranslateView
 
         mIsFavorite=on;
 
-        if (mAreButtonsEnabled)
-            mIvFavorite.setColorFilter(ContextCompat.getColor(getActivity(), on?R.color.colorAccent:R.color.colorGrayPic));
-        else mIvFavorite.setColorFilter(R.color.colorLightGray);
+        if (mAreButtonsEnabled) {
+            mIvFavorite.setColorFilter(ContextCompat.getColor(getActivity(), on ? R.color.colorAccent : R.color.colorGrayPic));
+            mIvFavorite.setContentDescription(mIsFavorite?"on":"off");
+        }
+        else {
+            mIvFavorite.setColorFilter(R.color.colorLightGray);
+            mIvFavorite.setContentDescription("off");
+        }
     }
 
     @Override
@@ -399,6 +410,16 @@ public class TranslateFragment extends StandardFragment implements TranslateView
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
         getActivity().finish();
+    }
+
+    @Override
+    public void incrementIdling() {
+        ((MainActivity)getActivity()).incrementIdlingResource();
+    }
+
+    @Override
+    public void decrementIdling() {
+        ((MainActivity)getActivity()).decrementIdlingResource();
     }
 
     @Override

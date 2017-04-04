@@ -7,6 +7,7 @@ import android.support.annotation.IdRes;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.TabLayout;
+import android.support.test.espresso.IdlingResource;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
@@ -183,4 +184,18 @@ public class MainActivity extends StandardActivity implements MainView {
         super.onPause();
         EventBus.getDefault().unregister(this);
     }
+
+    public void incrementIdlingResource() {
+        mPresenter.incrementIdlingResource();
+    }
+
+    public void decrementIdlingResource() {
+        mPresenter.decrementIdlingResource();
+    }
+
+    public IdlingResource getIdlingResource() {
+        return mPresenter.getIdlingResource();
+    }
+
+
 }

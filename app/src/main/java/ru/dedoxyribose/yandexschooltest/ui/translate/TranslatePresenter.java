@@ -20,6 +20,8 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import okhttp3.ResponseBody;
@@ -90,6 +92,19 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
         super.onFirstViewAttach();
 
         Log.d(APP_TAG, TAG+this.toString());
+
+        if (Singletone.getInstance().getLangs()==null) {
+            List<Lang> langs=getDaoSession().getLangDao().loadAll();
+            Collections.sort(langs, new Comparator<Lang>() {
+                @Override
+                public int compare(Lang lang, Lang t1) {
+                    return lang.getName().compareTo(t1.getName());
+                }
+            });
+
+            Singletone.getInstance().setLangs(langs);
+        }
+
 
         getViewState().setTranslationButtonsEnabled(false);
 
@@ -228,8 +243,9 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
         Log.d(APP_TAG, TAG+"doMakeCall()");
 
+        setLoading(true);
+
         mCurRecord=null;
-        mLoading=true;
         mDictionaryRecord=null;
         mTranslationRecord=null;
 
@@ -343,7 +359,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
         mGotDictionaryResponse=false;
         mGotTranslationResponse=false;
 
-        getViewState().showLoading(true);
+        setLoading(true);
         getViewState().showError(false, null, null, false);
 
         final int curReqNum=mRequestNum;
@@ -408,7 +424,8 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
                             if (t!=null) t.printStackTrace();
 
-                            getViewState().showLoading(false);
+                            setLoading(false);
+
                             if (t instanceof IOException) {
                                 getViewState().showError(true, getContext().getString(R.string.ConnectionError),
                                         getContext().getString(R.string.CheckConnection), true);
@@ -434,7 +451,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
         if (!successful && !(dictionary && errorCode==501)) {
 
-            mLoading=false;
+            setLoading(false);
 
             mGotDictionaryResponse=true;
             mGotTranslationResponse=true;
@@ -443,7 +460,6 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
             mTranslationRecord=null;
             mCurRecord=null;
 
-            getViewState().showLoading(false);
 
             if (errorCode==-1)
                 getViewState().showError(true, getContext().getString(R.string.UnknownError), null, true);
@@ -469,8 +485,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
             if ((mGotDictionaryResponse && mGotTranslationResponse) || (mGotTranslationResponse && noDict)) {
 
-                getViewState().showLoading(false);
-                mLoading=false;
+                setLoading(false);
 
                 if (mDictionaryRecord == null || mDictionaryRecord.getText() == null || mDictionaryRecord.getText().length() < 1) {
                     mCurRecord = mTranslationRecord;
@@ -493,6 +508,18 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
                 updateFavoriteButton();
             }
         }
+    }
+
+    private void setLoading(boolean loading) {
+
+        if (loading!=mLoading) {
+            if (loading) getViewState().incrementIdling();
+            else getViewState().decrementIdling();
+        }
+
+        mLoading=loading;
+        getViewState().showLoading(mLoading);
+
     }
 
     public void repeatClicked() {
@@ -589,7 +616,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
             }
             showLangs();
 
-            if (mCurText.length()>0) makeCall(false);
+            if (mCurText.length()>0) makeCall(true);
         }
         else if (requestCode == TranslateFragment.REQUEST_CODE_RECOGNIZE && resultCode == RecognizerActivity.RESULT_OK) {
             final String result = data.getStringExtra(RecognizerActivity.EXTRA_RESULT);

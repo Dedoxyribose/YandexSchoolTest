@@ -134,7 +134,8 @@
             android:text="Test"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:textColor="@color/colorBlackText"
-            android:textSize="17sp" />
+            android:textSize="17sp"
+            android:visibility="gone" />
 
         <TextView
             android:layout_width="match_parent"

@@ -127,12 +127,12 @@ public class SettingsFragment extends StandardFragment  {
             public void onClick(View view) {
 
                 List<Record> list = new ArrayList<>();
-                long time=System.currentTimeMillis()-1000000;
+                long time=System.currentTimeMillis()-300;
 
-                for (int i=0; i<10000; i++) {
+                for (int i=0; i<300; i++) {
                     Log.d("YST", ""+i);
                     Record record=new Record();
-                    record.setText(""+i);
+                    record.setText("aaa "+i);
                     record.setTranslation("tr "+i);
                     record.setDirection("en-ru");
                     record.setInHistory(true);

@@ -11,11 +11,15 @@ import android.support.v7.widget.RecyclerView;
 
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 
 import android.view.View;
 import android.view.ViewGroup;
 
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 
@@ -158,21 +162,26 @@ public class RecordListFragment extends StandardFragment implements RecordListVi
             }
         });
 
-        mRvList.addOnScrollListener(new RecyclerView.OnScrollListener() {
+        mEtSearch.setOnEditorActionListener(new EditText.OnEditorActionListener() {
             @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
 
-                if (mLayoutManager.findLastCompletelyVisibleItemPosition()>=mrAdapter.getItemCount()-RecordListPresenter.MAX_PER_PAGE/3)
-                {
-                    mPresenter.onEndReached();
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    hideSoftKeyboard();
+                    return true;
                 }
-
+                return false;
             }
         });
 
+    }
 
-
+    public void hideSoftKeyboard() {
+        InputMethodManager inputMethodManager =
+                (InputMethodManager) getActivity().getSystemService(
+                        Activity.INPUT_METHOD_SERVICE);
+        inputMethodManager.hideSoftInputFromWindow(
+                getActivity().getCurrentFocus().getWindowToken(), 0);
     }
 
     @Override
@@ -187,17 +196,17 @@ public class RecordListFragment extends StandardFragment implements RecordListVi
 
     @Override
     public void notifyItemChanged(int i) {
-        mrAdapter.notifyItemChanged(mRecordList.size()-1-i);
+        mrAdapter.notifyItemChanged(i);
     }
 
     @Override
     public void notifyItemRemoved(int i) {
-        mrAdapter.notifyItemRemoved(mRecordList.size()-1-i);
+        mrAdapter.notifyItemRemoved(i);
     }
 
     @Override
     public void notifyItemInserted(int i) {
-        mrAdapter.notifyItemInserted(mRecordList.size()-1-i);
+        mrAdapter.notifyItemInserted(i);
     }
 
     @Override
@@ -303,6 +312,10 @@ public class RecordListFragment extends StandardFragment implements RecordListVi
             private TextView mTvText, mTvTranslation, mTvDirection;
             private ImageView mIvIcon;
 
+            public String getText(){
+                return mTvText.getText().toString();
+            }
+
             public RecycleViewHolder(View itemView) {
                 super(itemView);
 
@@ -328,6 +341,8 @@ public class RecordListFragment extends StandardFragment implements RecordListVi
 
                 mIvIcon.setColorFilter(ContextCompat.getColor(getActivity(),
                         record.isInFavorite()?R.color.colorAccent:R.color.colorGrayPic));
+
+                mIvIcon.setContentDescription(record.isInFavorite()?"on":"off");
 
                 mIvIcon.setOnClickListener(new View.OnClickListener() {
                     @Override

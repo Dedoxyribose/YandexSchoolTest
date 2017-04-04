@@ -215,10 +215,11 @@ public class Record {
     public void setText(String text) {
         this.text = text;
         this.lowText=text.toLowerCase();
+        generateId();
     }
 
     public void generateId() {
-        id=getDirection()+getTranslation();
+        id=getLowText()+getTranslation();
     }
 
     public void setType(int type) {
@@ -227,7 +228,6 @@ public class Record {
 
     public void setTranslation(String translation) {
         this.translation = translation;
-        generateId();
     }
 
     public void setLowText(String lowText) {
