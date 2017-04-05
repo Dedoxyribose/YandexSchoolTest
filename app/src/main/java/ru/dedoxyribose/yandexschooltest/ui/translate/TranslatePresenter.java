@@ -449,6 +449,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
         Log.d(APP_TAG, TAG+"gotResponse, successfull="+successful+" errorCode="+errorCode);
         if (reqNum!=mRequestNum) return;
 
+
         if (!successful && !(dictionary && errorCode==501)) {
 
             setLoading(false);
@@ -460,14 +461,12 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
             mTranslationRecord=null;
             mCurRecord=null;
 
-
             if (errorCode==-1)
                 getViewState().showError(true, getContext().getString(R.string.UnknownError), null, true);
             else if (errorCode==0)
                 getViewState().showError(true, getContext().getString(R.string.ConnectionError),
                         getContext().getString(R.string.CheckConnection), true);
-            else
-            {
+            else {
                 String text=Utils.getErrorTextForCode(getContext(), errorCode);
                 getViewState().showError(true, getContext().getString(R.string.Error), text, false);
             }
