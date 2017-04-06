@@ -8,6 +8,7 @@ buildscript {
     ext.gson_version = '2.4'
     ext.greendao_version = '3.2.0'
     ext.espresso_version = '2.2.1'
+    ext.acra_version = '4.9.0'
     repositories {
         jcenter()
         mavenCentral()

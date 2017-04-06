@@ -3,6 +3,7 @@ package ru.dedoxyribose.yandexschooltest.ui.chooselang;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.util.Log;
 
 import com.arellomobile.mvp.InjectViewState;
 
@@ -26,47 +27,58 @@ public class ChooseLangPresenter extends StandardMvpPresenter<ChooseLangView>{
     private boolean mIsLangFrom =true;
     private String mCurLangCode="ru";
 
+    private boolean mFirstTime=true;
+
     public void setIntent(Intent intent) {
         if (intent.getIntExtra(ChooseLangActivity.ARG_LANG_POSITION, 0)==ChooseLangActivity.LANG_POSITION_FROM)
             mIsLangFrom =true;
         else mIsLangFrom =false;
 
         mCurLangCode=intent.getStringExtra(ChooseLangActivity.ARG_CUR_LANG);
+
+        if (mFirstTime) {
+
+            mFirstTime=false;
+
+            getViewState().setTitle(getContext().getString(mIsLangFrom ?R.string.LangOfText:R.string.LangOfTrsl));
+
+            List<Lang> allLangs=Singletone.getInstance().getLangs();
+            List<Lang> sortedLangs = new ArrayList<>(allLangs);
+
+            Collections.sort(sortedLangs, new Comparator<Lang>() {
+                @Override
+                public int compare(Lang l1, Lang l2) {
+                    if (l1.getAskedTime()==l2.getAskedTime()) return 0;
+                    else return l1.getAskedTime()<l2.getAskedTime()?1:-1;
+                }
+            });
+
+            List<Lang> recentLangs=new ArrayList<>();
+
+            for (int i=0; i<5; i++)
+            {
+                if (sortedLangs.get(i).getAskedTime()>0)
+                    recentLangs.add(sortedLangs.get(i));
+            }
+
+            int curLangPos=0;
+            for (Lang lang : allLangs){
+                if (lang.getCode().equals(mCurLangCode))
+                    break;
+                curLangPos++;
+            }
+
+            getViewState().setData(mIsLangFrom, recentLangs, allLangs, curLangPos);
+        }
     }
 
     @Override
     protected void onFirstViewAttach() {
         super.onFirstViewAttach();
 
-        getViewState().setTitle(getContext().getString(mIsLangFrom ?R.string.LangOfText:R.string.LangOfTrsl));
 
-        List<Lang> allLangs=Singletone.getInstance().getLangs();
-        List<Lang> sortedLangs = new ArrayList<>(allLangs);
+        Log.d(APP_TAG, TAG+" onFirstViewAttach");
 
-        Collections.sort(sortedLangs, new Comparator<Lang>() {
-            @Override
-            public int compare(Lang l1, Lang l2) {
-                if (l1.getAskedTime()==l2.getAskedTime()) return 0;
-                else return l1.getAskedTime()<l2.getAskedTime()?1:-1;
-            }
-        });
-
-        List<Lang> recentLangs=new ArrayList<>();
-
-        for (int i=0; i<5; i++)
-        {
-            if (sortedLangs.get(i).getAskedTime()>0)
-                recentLangs.add(sortedLangs.get(i));
-        }
-
-        int curLangPos=0;
-        for (Lang lang : allLangs){
-            if (lang.getCode().equals(mCurLangCode))
-                break;
-            curLangPos++;
-        }
-
-        getViewState().setData(mIsLangFrom, recentLangs, allLangs, curLangPos);
 
     }
 

@@ -10,6 +10,8 @@ import com.google.gson.GsonBuilder;
 
 import org.greenrobot.greendao.database.Database;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import ru.dedoxyribose.yandexschooltest.model.entity.DaoMaster;
@@ -45,10 +47,18 @@ public class Singletone {
     public static void init(Context context) {
         if (sInstance==null)
         {
+            Log.d(TAG, "new Instance for Singletone");
             sInstance=new Singletone(context);
             sInstance.mContext=context.getApplicationContext();
             configureGreenDao(context);
             initGson();
+            sInstance.mLangs=getDaoSession().getLangDao().loadAll();
+            Collections.sort(sInstance.mLangs, new Comparator<Lang>() {
+                @Override
+                public int compare(Lang lang, Lang t1) {
+                    return lang.getName().compareTo(t1.getName());
+                }
+            });
             sInstance.loadSettings();
         }
     }

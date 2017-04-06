@@ -331,11 +331,11 @@ public class TranslateFragment extends StandardFragment implements TranslateView
     }
 
     @Override
-    public void setTextSpeechStatus(boolean enabled, boolean loading) {
+    public void setTextSpeechStatus(boolean visible, boolean enabled, boolean loading) {
         mIvSpeak.setImageResource(enabled?R.drawable.ic_volume_up_black_24dp:R.drawable.ic_volume_off_black_24dp);;
         mIvSpeak.setEnabled(enabled);
 
-        mIvSpeak.setVisibility(loading?View.GONE:View.VISIBLE);
+        mIvSpeak.setVisibility((loading || !visible)?View.GONE:View.VISIBLE);
         mPbSpeak.setVisibility(loading?View.VISIBLE:View.GONE);
     }
 

@@ -3,6 +3,7 @@
     <color name="colorPrimary">#FFDB4D</color>
     <color name="colorPrimaryDark">#D6B327</color>
     <color name="colorAccent">#FFDB4D</color>
+    <color name="colorAccentLight">#ffe680</color>
     <color name="colorGrayPic">#888</color>
     <color name="colorBlackText">#111</color>
     <color name="colorGrayText">#999</color>

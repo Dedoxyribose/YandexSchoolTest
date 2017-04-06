@@ -51,7 +51,7 @@ public interface TranslateView extends MvpView {
     public void startRecognition(Intent intent);
 
     @StateStrategyType(AddToEndSingleStrategy.class)
-    public void setTextSpeechStatus(boolean enabled, boolean loading);
+    public void setTextSpeechStatus(boolean visible, boolean enabled, boolean loading);
 
     @StateStrategyType(AddToEndSingleStrategy.class)
     public void setTranslateSpeechStatus(boolean enabled, boolean loading);

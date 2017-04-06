@@ -36,6 +36,7 @@ import ru.dedoxyribose.yandexschooltest.ui.translate.TranslateFragment;
 import ru.dedoxyribose.yandexschooltest.util.Singletone;
 import ru.dedoxyribose.yandexschooltest.util.Utils;
 import ru.dedoxyribose.yandexschooltest.widget.NonSwipeableViewPager;
+import ru.yandex.speechkit.SpeechKit;
 
 public class MainActivity extends StandardActivity implements MainView {
 
@@ -51,6 +52,8 @@ public class MainActivity extends StandardActivity implements MainView {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        SpeechKit.getInstance().configure(getApplicationContext(), getString(R.string.sdk_key));
 
         mViewPager = (NonSwipeableViewPager) findViewById(R.id.vpPages);
         mTabLayout = (TabLayout) findViewById(R.id.tabPages);

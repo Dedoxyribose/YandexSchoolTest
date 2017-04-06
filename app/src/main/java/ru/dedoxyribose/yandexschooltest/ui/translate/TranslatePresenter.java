@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -20,9 +21,8 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -38,7 +38,6 @@ import ru.dedoxyribose.yandexschooltest.model.entity.RecordDao;
 import ru.dedoxyribose.yandexschooltest.model.viewmodel.ListItem;
 import ru.dedoxyribose.yandexschooltest.ui.chooselang.ChooseLangActivity;
 import ru.dedoxyribose.yandexschooltest.ui.fullscreen.FullscreenActivity;
-import ru.dedoxyribose.yandexschooltest.ui.recordlist.RecordListFragment;
 import ru.dedoxyribose.yandexschooltest.ui.standard.StandardMvpPresenter;
 import ru.dedoxyribose.yandexschooltest.util.RetrofitHelper;
 import ru.dedoxyribose.yandexschooltest.util.Singletone;
@@ -57,6 +56,7 @@ import ru.yandex.speechkit.gui.RecognizerActivity;
 public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
     public static final long INPUT_TIMEOUT=500;
+    private static final long VOCALIZER_TIMEOUT = 20000;
 
     private volatile Record mCurRecord;
     private String mCurText="";
@@ -87,24 +87,8 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
     private Vocalizer mTextVocalizer;
     private Vocalizer mTranslateVocalizer;
 
-    @Override
-    protected void onFirstViewAttach() {
-        super.onFirstViewAttach();
 
-        Log.d(APP_TAG, TAG+this.toString());
-
-        if (Singletone.getInstance().getLangs()==null) {
-            List<Lang> langs=getDaoSession().getLangDao().loadAll();
-            Collections.sort(langs, new Comparator<Lang>() {
-                @Override
-                public int compare(Lang lang, Lang t1) {
-                    return lang.getName().compareTo(t1.getName());
-                }
-            });
-
-            Singletone.getInstance().setLangs(langs);
-        }
-
+    public TranslatePresenter() {
 
         getViewState().setTranslationButtonsEnabled(false);
 
@@ -176,12 +160,23 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
         showLangs();
 
         EventBus.getDefault().register(this);
+    }
+
+    @Override
+    protected void onFirstViewAttach() {
+        super.onFirstViewAttach();
+
+        Log.d(APP_TAG, TAG+" onFirstViewAttach");
+
+
 
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
+
+        Log.d(APP_TAG, TAG+" onDestroy");
 
         if (mWaiter!=null && mWaiter.isAlive()) mWaiter.interrupt();
 
@@ -198,12 +193,19 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
     public void attachView(TranslateView view) {
         super.attachView(view);
 
+        Log.d(APP_TAG, TAG+" attachView");
 
     }
 
     public void clearClicked() {
         getViewState().setText("");
         mRequestNum++;
+
+        if (!Singletone.getInstance().isSyncTranslation()) {
+            mCurRecord=null;
+            getViewState().setDefData(new ArrayList<ListItem>());
+            getViewState().setMainText("");
+        }
 
     }
 
@@ -216,6 +218,8 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
         mCurText=charSequence.toString();
 
         getViewState().showError(false, null, null, false);
+
+        updateSpeechButtonStates();
 
         showLangs();
     }
@@ -265,10 +269,13 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
             mCurTranslationCall=null;
         }
 
+        String ui="ru";
+        if (!Locale.getDefault().getLanguage().equals("ru")) ui="en";
+
         if (!noDict) {
 
             mCurDictionaryCall=RetrofitHelper.getServerApi().lookup(getContext().getString(R.string.dict_key),
-                    direction, mCurText, "ru");
+                    direction, mCurText, ui);
             mCurDictionaryCall.enqueue(
                     new Callback<Record>() {
                         @Override
@@ -676,12 +683,38 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
     }
 
+    public AsyncTask makeAsyncTaskForVocalizer(final Vocalizer vocalizer) {
+        return new AsyncTask() {
+            @Override
+            protected Object doInBackground(Object[] objects) {
+                try {
+                    Thread.sleep(VOCALIZER_TIMEOUT);
+                } catch (InterruptedException e) { }
+
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Object o) {
+                Log.d(TAG, "asyncTaskForVocalizer onPostExecute");
+                vocalizer.cancel();
+            }
+
+            @Override
+            protected void onCancelled() {
+                Log.d(TAG, "asyncTaskForVocalizer cancelled");
+                super.onCancelled();
+            }
+        };
+    }
+
     public void speakClicked() {
 
         if (mLangFrom!=null && Utils.getSpeechCodeForLang(mLangFrom.getCode())!=null) {
             mTextSpeechProgress=true;
             mTextVocalizer=Vocalizer.createVocalizer(Utils.getSpeechCodeForLang(mLangFrom.getCode()), mCurText, true);
-            mTextVocalizer.setListener(new VocalizerListener() {
+            final AsyncTask asyncTask = makeAsyncTaskForVocalizer(mTextVocalizer).execute();
+            VocalizerListener listener = new VocalizerListener() {
                 @Override
                 public void onSynthesisBegin(Vocalizer vocalizer) {
                     Log.d(APP_TAG, TAG+"onSynthesisBegin");
@@ -695,11 +728,13 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
                 @Override
                 public void onPlayingBegin(Vocalizer vocalizer) {
                     Log.d(APP_TAG, TAG+"onPlayingBegin");
+                    asyncTask.cancel(true);
                 }
 
                 @Override
                 public void onPlayingDone(Vocalizer vocalizer) {
                     Log.d(APP_TAG, TAG+"onPlayingDone");
+                    asyncTask.cancel(true);
                     mTextSpeechProgress=false;
                     showLangs();
                 }
@@ -707,17 +742,23 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
                 @Override
                 public void onVocalizerError(Vocalizer vocalizer, Error error) {
                     Log.d(APP_TAG, TAG+"onVocalizerError");
-                    mTextSpeechProgress=false;
-                    showLangs();
-                    Toast.makeText(getContext(), getContext().getString(R.string.UnableToSynthesizeSpeech), Toast.LENGTH_SHORT).show();
+                    asyncTask.cancel(true);
+                    makeTextSpeechError();
                 }
-            });
+            };
+            mTextVocalizer.setListener(listener);
             mTextVocalizer.start();
 
             showLangs();
 
             makeFinalCall();
         }
+    }
+
+    private void makeTextSpeechError() {
+        mTextSpeechProgress=false;
+        showLangs();
+        Toast.makeText(getContext(), getContext().getString(R.string.UnableToSynthesizeSpeech), Toast.LENGTH_SHORT).show();
     }
 
     public void speakTrslClicked() {
@@ -728,7 +769,8 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
             Log.d(APP_TAG, TAG+"direction="+mCurRecord.getDirection());
             mTranslateVocalizer=Vocalizer.createVocalizer(
                     Utils.getSpeechCodeForLang(mCurRecord.getDirection().substring(3)), mCurRecord.getTranslation(), true);
-            mTranslateVocalizer.setListener(new VocalizerListener() {
+            final AsyncTask asyncTask = makeAsyncTaskForVocalizer(mTranslateVocalizer).execute();
+            VocalizerListener listener =new VocalizerListener() {
                 @Override
                 public void onSynthesisBegin(Vocalizer vocalizer) {
                     Log.d(APP_TAG, TAG+"onSynthesisBegin");
@@ -742,11 +784,13 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
                 @Override
                 public void onPlayingBegin(Vocalizer vocalizer) {
                     Log.d(APP_TAG, TAG+"onPlayingBegin");
+                    asyncTask.cancel(true);
                 }
 
                 @Override
                 public void onPlayingDone(Vocalizer vocalizer) {
                     Log.d(APP_TAG, TAG+"onPlayingDone");
+                    asyncTask.cancel(true);
                     mTranslateSpeechProgress=false;
                     showLangs();
                 }
@@ -754,17 +798,23 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
                 @Override
                 public void onVocalizerError(Vocalizer vocalizer, Error error) {
                     Log.d(APP_TAG, TAG+"onVocalizerError");
-                    mTranslateSpeechProgress=false;
-                    showLangs();
-                    Toast.makeText(getContext(), getContext().getString(R.string.UnableToSynthesizeSpeech), Toast.LENGTH_SHORT).show();
+                    asyncTask.cancel(true);
+                    makeTrslSpeechError();
                 }
-            });
+            };
+            mTranslateVocalizer.setListener(listener);
             mTranslateVocalizer.start();
 
             showLangs();
 
             saveCurRecord();
         }
+    }
+
+    private void makeTrslSpeechError() {
+        mTranslateSpeechProgress=false;
+        showLangs();
+        Toast.makeText(getContext(), getContext().getString(R.string.UnableToSynthesizeSpeech), Toast.LENGTH_SHORT).show();
     }
 
     private void setCurText(String text) {
@@ -774,7 +824,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
     private void updateSpeechButtonStates(){
         getViewState().setRecognitionEnabled(mLangFrom!=null && Utils.getSpeechCodeForLang(mLangFrom.getCode())!=null);
-        getViewState().setTextSpeechStatus(mLangFrom!=null && Utils.getSpeechCodeForLang(mLangFrom.getCode())!=null
+        getViewState().setTextSpeechStatus(mCurText.length()>0, mLangFrom!=null && Utils.getSpeechCodeForLang(mLangFrom.getCode())!=null
                 && mCurText.length()<=100, mTextSpeechProgress);
         getViewState().setTranslateSpeechStatus(mCurRecord!=null && mCurRecord.getDirection()!=null &&
                 Utils.getSpeechCodeForLang(mCurRecord.getDirection().substring(3))!=null
@@ -886,6 +936,10 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
         mLangFrom=Utils.getLangByCode(mCurRecord.getDirection().substring(0,2), Singletone.getInstance().getLangs());
         mLangTo=Utils.getLangByCode(mCurRecord.getDirection().substring(3,5), Singletone.getInstance().getLangs());
+
+        Singletone.getInstance().setLastLangFrom(mLangFrom.getCode());
+        Singletone.getInstance().setLastLangTo(mLangTo.getCode());
+        Singletone.getInstance().saveSettings();
 
         showLangs();
 

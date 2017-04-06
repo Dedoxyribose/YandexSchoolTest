@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -44,7 +45,7 @@ public class StartPresenter extends StandardMvpPresenter<StartView>{
     protected void onFirstViewAttach() {
         super.onFirstViewAttach();
 
-        List<Lang> langs=getDaoSession().getLangDao().loadAll();
+        List<Lang> langs=Singletone.getInstance().getLangs();
 
         if (langs.size()==0){
             refreshLangs();
@@ -65,9 +66,12 @@ public class StartPresenter extends StandardMvpPresenter<StartView>{
 
     private void refreshLangs() {
 
+        String ui="ru";
+        if (!Locale.getDefault().getLanguage().equals("ru")) ui="en";
+
         getViewState().showLoading(true);
         getViewState().showError(false, null);
-        RetrofitHelper.getServerApi().getLangs(getContext().getString(R.string.trans_key), "ru").enqueue(new Callback<SupportedLangs>() {
+        RetrofitHelper.getServerApi().getLangs(getContext().getString(R.string.trans_key), ui).enqueue(new Callback<SupportedLangs>() {
             @Override
             public void onResponse(Call<SupportedLangs> call, Response<SupportedLangs> response) {
                 if (response.isSuccessful()){
@@ -75,9 +79,10 @@ public class StartPresenter extends StandardMvpPresenter<StartView>{
                     List<Lang> langs=new ArrayList<>();
 
                     for (Lang lang: response.body().getLangs()) {
-                        getDaoSession().getLangDao().insertOrReplace(lang);
                         langs.add(lang);
                     }
+
+                    getDaoSession().getLangDao().insertOrReplaceInTx(langs);
 
                     Collections.sort(langs, new Comparator<Lang>() {
                         @Override
