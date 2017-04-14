@@ -5,7 +5,8 @@ import android.support.v7.app.AppCompatActivity;
 
 import com.arellomobile.mvp.MvpAppCompatActivity;
 
-import ru.dedoxyribose.yandexschooltest.util.Singletone;
+import ru.dedoxyribose.yandexschooltest.YandexSchoolTestApplication;
+import ru.dedoxyribose.yandexschooltest.util.AppSession;
 import ru.dedoxyribose.yandexschooltest.model.entity.DaoSession;
 
 /**
@@ -14,34 +15,33 @@ import ru.dedoxyribose.yandexschooltest.model.entity.DaoSession;
 public class StandardActivity extends MvpAppCompatActivity {
 
 
-    public boolean mIsAlive=false;
-
-    protected DaoSession mDaoSession;
+    private AppSession mAppSession;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mIsAlive=true;
+        mAppSession = YandexSchoolTestApplication.getAppSessionComponent().getAppSession();
 
-        mDaoSession= Singletone.getDaoSession();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
 
-        mIsAlive=false;
     }
 
-    public AppCompatActivity getActivity()
-    {
+    public AppCompatActivity getActivity() {
         return this;
     }
 
     protected DaoSession getDaoSession()
     {
-        return mDaoSession;
+        return mAppSession.getDaoSession();
+    }
+
+    protected AppSession getAppSession() {
+        return mAppSession;
     }
 
 }

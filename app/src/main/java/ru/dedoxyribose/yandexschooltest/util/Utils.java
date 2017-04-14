@@ -4,15 +4,11 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Typeface;
-import android.support.annotation.StringRes;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.TextView;
 
-import com.google.gson.reflect.TypeToken;
-
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -50,7 +46,7 @@ public class Utils {
     public static Record deserializeRecord(boolean dict, JSONObject jsonObject, String initialText, String direction) {
         Record record = new Record();
 
-        record=Singletone.getGson().fromJson(jsonObject.toString(), Record.class);
+        record= AppSession.getGson().fromJson(jsonObject.toString(), Record.class);
 
         record.setDirection(direction);
         if (!dict) {

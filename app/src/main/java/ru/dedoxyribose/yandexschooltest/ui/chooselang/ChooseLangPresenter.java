@@ -15,8 +15,7 @@ import java.util.List;
 import ru.dedoxyribose.yandexschooltest.R;
 import ru.dedoxyribose.yandexschooltest.model.entity.Lang;
 import ru.dedoxyribose.yandexschooltest.ui.standard.StandardMvpPresenter;
-import ru.dedoxyribose.yandexschooltest.util.Singletone;
-import ru.dedoxyribose.yandexschooltest.util.Utils;
+import ru.dedoxyribose.yandexschooltest.util.AppSession;
 
 /**
  * Created by Ryan on 27.02.2017.
@@ -42,7 +41,7 @@ public class ChooseLangPresenter extends StandardMvpPresenter<ChooseLangView>{
 
             getViewState().setTitle(getContext().getString(mIsLangFrom ?R.string.LangOfText:R.string.LangOfTrsl));
 
-            List<Lang> allLangs=Singletone.getInstance().getLangs();
+            List<Lang> allLangs= getAppSession().getLangs();
             List<Lang> sortedLangs = new ArrayList<>(allLangs);
 
             Collections.sort(sortedLangs, new Comparator<Lang>() {

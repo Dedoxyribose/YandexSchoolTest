@@ -5,8 +5,6 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
-import com.google.gson.annotations.Since;
-import com.google.gson.reflect.TypeToken;
 
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Id;
@@ -20,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.greenrobot.greendao.annotation.Generated;
 
-import ru.dedoxyribose.yandexschooltest.util.Singletone;
+import ru.dedoxyribose.yandexschooltest.util.AppSession;
 
 /**
  * Created by Ryan on 16.03.2017.
@@ -83,7 +81,7 @@ public class Record {
     public Record copy() {
         Record record = new Record(type, id, text, translation, lowText, lowTranslation, direction, jsonDefStr,
                 requestTime, inHistory, inFavorite, historyTime, favoriteTime);
-        record.inflateDefs(Singletone.getGson());
+        record.inflateDefs(AppSession.getGson());
         return record;
     }
 

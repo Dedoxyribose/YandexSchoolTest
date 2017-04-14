@@ -12,6 +12,7 @@ import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
 
 import com.arellomobile.mvp.presenter.InjectPresenter;
@@ -88,6 +89,9 @@ public class HistoriesFragment extends StandardFragment  {
 
             @Override
             public void onPageSelected(int position) {
+
+                hideSoftKeyboard();
+
                 int i=(position==0)?1:0;
 
                 if (mPagerAdapter.getRegisteredFragment(i)!=null) {
@@ -133,6 +137,15 @@ public class HistoriesFragment extends StandardFragment  {
                             View.VISIBLE:View.GONE);
         }
     }
+
+    public void hideSoftKeyboard() {
+        InputMethodManager inputMethodManager =
+                (InputMethodManager) getActivity().getSystemService(
+                        Activity.INPUT_METHOD_SERVICE);
+        inputMethodManager.hideSoftInputFromWindow(
+                getActivity().getCurrentFocus().getWindowToken(), 0);
+    }
+
 
     public class SectionsPagerAdapter extends FragmentPagerAdapter {
 

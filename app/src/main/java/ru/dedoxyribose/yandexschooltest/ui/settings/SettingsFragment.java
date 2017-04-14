@@ -1,22 +1,14 @@
 package ru.dedoxyribose.yandexschooltest.ui.settings;
 
 import android.app.Activity;
-import android.app.Fragment;
-import android.app.FragmentManager;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.TabLayout;
-import android.support.v13.app.FragmentPagerAdapter;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.view.ViewPager;
 import android.support.v7.widget.SwitchCompat;
 import android.util.Log;
-import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -25,9 +17,8 @@ import java.util.List;
 import ru.dedoxyribose.yandexschooltest.R;
 import ru.dedoxyribose.yandexschooltest.model.entity.Record;
 import ru.dedoxyribose.yandexschooltest.ui.about.AboutActivity;
-import ru.dedoxyribose.yandexschooltest.ui.recordlist.RecordListFragment;
 import ru.dedoxyribose.yandexschooltest.ui.standard.StandardFragment;
-import ru.dedoxyribose.yandexschooltest.util.Singletone;
+import ru.dedoxyribose.yandexschooltest.util.AppSession;
 
 
 public class SettingsFragment extends StandardFragment  {
@@ -86,31 +77,31 @@ public class SettingsFragment extends StandardFragment  {
         msDict=(SwitchCompat) view.findViewById(R.id.sDict);
         msReturn=(SwitchCompat) view.findViewById(R.id.sReturn);
 
-        msSync.setChecked(Singletone.getInstance().isSyncTranslation());
-        msDict.setChecked(Singletone.getInstance().isShowDict());
-        msReturn.setChecked(Singletone.getInstance().isReturnTranslate());
+        msSync.setChecked(getAppSession().isSyncTranslation());
+        msDict.setChecked(getAppSession().isShowDict());
+        msReturn.setChecked(getAppSession().isReturnTranslate());
 
         msSync.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                Singletone.getInstance().setSyncTranslation(b);
-                Singletone.getInstance().saveSettings();
+                getAppSession().setSyncTranslation(b);
+                getAppSession().saveSettings();
             }
         });
 
         msDict.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                Singletone.getInstance().setShowDict(b);
-                Singletone.getInstance().saveSettings();
+                getAppSession().setShowDict(b);
+                getAppSession().saveSettings();
             }
         });
 
         msReturn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                Singletone.getInstance().setReturnTranslate(b);
-                Singletone.getInstance().saveSettings();
+                getAppSession().setReturnTranslate(b);
+                getAppSession().saveSettings();
             }
         });
 

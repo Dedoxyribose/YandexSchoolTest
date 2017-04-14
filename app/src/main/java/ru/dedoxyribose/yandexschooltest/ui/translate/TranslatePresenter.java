@@ -39,8 +39,8 @@ import ru.dedoxyribose.yandexschooltest.model.viewmodel.ListItem;
 import ru.dedoxyribose.yandexschooltest.ui.chooselang.ChooseLangActivity;
 import ru.dedoxyribose.yandexschooltest.ui.fullscreen.FullscreenActivity;
 import ru.dedoxyribose.yandexschooltest.ui.standard.StandardMvpPresenter;
+import ru.dedoxyribose.yandexschooltest.util.AppSession;
 import ru.dedoxyribose.yandexschooltest.util.RetrofitHelper;
-import ru.dedoxyribose.yandexschooltest.util.Singletone;
 import ru.dedoxyribose.yandexschooltest.util.Utils;
 import ru.yandex.speechkit.Error;
 import ru.yandex.speechkit.Recognizer;
@@ -101,7 +101,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
                         Thread.sleep(200);
 
                         if (mLastChangeTextTime!=0 && System.currentTimeMillis()-INPUT_TIMEOUT>=mLastChangeTextTime
-                                && Singletone.getInstance().isSyncTranslation()) {
+                                && getAppSession().isSyncTranslation()) {
                             new Handler(Looper.getMainLooper()).post(new Runnable() {
                                 @Override
                                 public void run() {
@@ -124,22 +124,31 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
         });
         mWaiter.start();
 
-        mLangFrom=Utils.getLangByCode(Singletone.getInstance().getLastLangFrom(), Singletone.getInstance().getLangs());
-        mLangTo=Utils.getLangByCode(Singletone.getInstance().getLastLangTo(), Singletone.getInstance().getLangs());
+        mLangFrom=Utils.getLangByCode(getAppSession().getLastLangFrom(), getAppSession().getLangs());
+        mLangTo=Utils.getLangByCode(getAppSession().getLastLangTo(), getAppSession().getLangs());
 
         if (mLangTo==null) {
-            mLangTo=Singletone.getInstance().getLangs().get(0);
+            mLangTo= getAppSession().getLangs().get(0);
         }
 
-        if (mLangFrom==null) mLangFrom=Utils.getLangByCode(mLangTo.getCode().equals("ru")?"en":"ru", Singletone.getInstance().getLangs());
+        if (mLangFrom==null) mLangFrom=Utils.getLangByCode(mLangTo.getCode().equals("ru")?"en":"ru", getAppSession().getLangs());
 
-        if (mLangTo==null || mLangFrom==null || Singletone.getInstance().getLangs().size()<3) {
+        if (mLangTo==null || mLangFrom==null || getAppSession().getLangs().size()<3) {
             getViewState().toFailActivity();
             return;
         }
 
+        if (mLangFrom.getAskedTime()==0) {
+            mLangFrom.setAskedTime(System.currentTimeMillis());
+            getDaoSession().getLangDao().insertOrReplace(mLangFrom);
+        }
 
-        mCurText=Singletone.getInstance().getLastText();
+        if (mLangTo.getAskedTime()==0) {
+            mLangTo.setAskedTime(System.currentTimeMillis());
+            getDaoSession().getLangDao().insertOrReplace(mLangTo);
+        }
+
+        mCurText= getAppSession().getLastText();
         if (!Utils.isEmpty(mCurText)) {
             getViewState().setText(mCurText);
 
@@ -185,8 +194,8 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
         EventBus.getDefault().unregister(this);
 
-        Singletone.getInstance().setLastText(mCurText);
-        Singletone.getInstance().saveSettings();
+        getAppSession().setLastText(mCurText);
+        getAppSession().saveSettings();
     }
 
     @Override
@@ -200,8 +209,9 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
     public void clearClicked() {
         getViewState().setText("");
         mRequestNum++;
+        getViewState().showLoading(false);
 
-        if (!Singletone.getInstance().isSyncTranslation()) {
+        if (!getAppSession().isSyncTranslation()) {
             mCurRecord=null;
             getViewState().setDefData(new ArrayList<ListItem>());
             getViewState().setMainText("");
@@ -228,7 +238,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
         Log.d(APP_TAG, TAG+"returnPressed");
 
-        if (Singletone.getInstance().isReturnTranslate()) {
+        if (getAppSession().isReturnTranslate()) {
             if (mCurText.length()>0) {
 
                 makeFinalCall();
@@ -257,7 +267,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
         final String direction=mLangFrom.getCode()+"-"+mLangTo.getCode();
 
-        final boolean noDict=!Singletone.getInstance().isShowDict();
+        final boolean noDict=!getAppSession().isShowDict();
 
         if (mCurDictionaryCall!=null) {
             mCurDictionaryCall.cancel();
@@ -274,7 +284,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
         if (!noDict) {
 
-            mCurDictionaryCall=RetrofitHelper.getServerApi().lookup(getContext().getString(R.string.dict_key),
+            mCurDictionaryCall=getServerApi().lookup(getContext().getString(R.string.dict_key),
                     direction, mCurText, ui);
             mCurDictionaryCall.enqueue(
                     new Callback<Record>() {
@@ -292,7 +302,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
                     });
         }
 
-        mCurTranslationCall=RetrofitHelper.getServerApi().translate(getContext().getString(R.string.trans_key),
+        mCurTranslationCall=getServerApi().translate(getContext().getString(R.string.trans_key),
                 direction, mCurText);
         mCurTranslationCall.enqueue(
                 new Callback<Record>() {
@@ -382,7 +392,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
         }
         else {
 
-            mCurLangCall=RetrofitHelper.getServerApi().detect(getContext().getString(R.string.trans_key), mCurText);
+            mCurLangCall=getServerApi().detect(getContext().getString(R.string.trans_key), mCurText);
             mCurLangCall.enqueue(
                     new Callback<ResponseBody>() {
                         @Override
@@ -402,7 +412,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
                                     Log.d(APP_TAG, TAG+jsonObject.toString());
                                     if (jsonObject.optString("lang")!=null) {
                                         String code=jsonObject.optString("lang");
-                                        mLangFrom=Utils.getLangByCode(code, Singletone.getInstance().getLangs());
+                                        mLangFrom=Utils.getLangByCode(code, getAppSession().getLangs());
 
                                         if (mLangFrom==null) {
                                             getViewState().showLangs(getContext().getString(R.string.UnableToDetermine),
@@ -562,9 +572,9 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
         mWasDetermined=false;
         showLangs();
 
-        Singletone.getInstance().setLastLangFrom(mLangFrom.getCode());
-        Singletone.getInstance().setLastLangTo(mLangTo.getCode());
-        Singletone.getInstance().saveSettings();
+        getAppSession().setLastLangFrom(mLangFrom.getCode());
+        getAppSession().setLastLangTo(mLangTo.getCode());
+        getAppSession().saveSettings();
 
         if (mCurText.length()>0 && mCurRecord!=null && mCurRecord.getTranslation()!=null) {
             setCurText(mCurRecord.getTranslation());
@@ -585,7 +595,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
         if (requestCode == TranslateFragment.REQ_CODE_GET_LANG && resultCode == Activity.RESULT_OK) {
 
             Lang newLang=Utils.getLangByCode(data.getStringExtra(ChooseLangActivity.RES_ARG_CHOSEN_LANG_CODE),
-                    Singletone.getInstance().getLangs());
+                    getAppSession().getLangs());
 
             if (data.getIntExtra(ChooseLangActivity.RES_ARG_CHOSEN_LANG_POS, 0)==ChooseLangActivity.LANG_POSITION_FROM) {
 
@@ -603,8 +613,8 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
                     getDefaultLangTo();
                 }
 
-                Singletone.getInstance().setLastLangFrom(data.getStringExtra(ChooseLangActivity.RES_ARG_CHOSEN_LANG_CODE));
-                Singletone.getInstance().saveSettings();
+                getAppSession().setLastLangFrom(data.getStringExtra(ChooseLangActivity.RES_ARG_CHOSEN_LANG_CODE));
+                getAppSession().saveSettings();
 
             }
             else {
@@ -616,8 +626,8 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
                     getDaoSession().getLangDao().insertOrReplace(mLangTo);
                 }
 
-                Singletone.getInstance().setLastLangTo(data.getStringExtra(ChooseLangActivity.RES_ARG_CHOSEN_LANG_CODE));
-                Singletone.getInstance().saveSettings();
+                getAppSession().setLastLangTo(data.getStringExtra(ChooseLangActivity.RES_ARG_CHOSEN_LANG_CODE));
+                getAppSession().saveSettings();
 
             }
             showLangs();
@@ -626,7 +636,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
         }
         else if (requestCode == TranslateFragment.REQUEST_CODE_RECOGNIZE && resultCode == RecognizerActivity.RESULT_OK) {
             final String result = data.getStringExtra(RecognizerActivity.EXTRA_RESULT);
-            setCurText(result);
+            setCurText(mCurText+result);
             makeFinalCall();
         }
 
@@ -634,16 +644,16 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
     private void getDefaultLangTo() {
 
-        if (mLangFrom==null) mLangTo=Utils.getLangByCode("ru", Singletone.getInstance().getLangs());
+        if (mLangFrom==null) mLangTo=Utils.getLangByCode("ru", getAppSession().getLangs());
         else {
-            if (mLangFrom.getCode().equals("ru"))  mLangTo=Utils.getLangByCode("en", Singletone.getInstance().getLangs());
-            else mLangTo=Utils.getLangByCode("ru", Singletone.getInstance().getLangs());
+            if (mLangFrom.getCode().equals("ru"))  mLangTo=Utils.getLangByCode("en", getAppSession().getLangs());
+            else mLangTo=Utils.getLangByCode("ru", getAppSession().getLangs());
         }
 
-        if (mLangTo==null) mLangTo=Singletone.getInstance().getLangs().get(0);
-        if (mLangFrom==mLangTo) mLangTo=Singletone.getInstance().getLangs().get(1);
+        if (mLangTo==null) mLangTo= getAppSession().getLangs().get(0);
+        if (mLangFrom==mLangTo) mLangTo= getAppSession().getLangs().get(1);
 
-        if (mLangTo==null || mLangFrom==null || Singletone.getInstance().getLangs().size()<3) {
+        if (mLangTo==null || mLangFrom==null || getAppSession().getLangs().size()<3) {
             getViewState().toFailActivity();
             return;
         }
@@ -929,17 +939,17 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
             mDictionaryRecord = mCurRecord;
             getViewState().setMainText(mCurRecord.getTranslation());
         }
-        if (Singletone.getInstance().isShowDict())
+        if (getAppSession().isShowDict())
             getViewState().setDefData(Utils.generateViewModelList(mCurRecord));
         else getViewState().setDefData(new ArrayList<ListItem>());
         getViewState().setTranslationButtonsEnabled(!Utils.isEmpty(mCurRecord.getTranslation()));
 
-        mLangFrom=Utils.getLangByCode(mCurRecord.getDirection().substring(0,2), Singletone.getInstance().getLangs());
-        mLangTo=Utils.getLangByCode(mCurRecord.getDirection().substring(3,5), Singletone.getInstance().getLangs());
+        mLangFrom=Utils.getLangByCode(mCurRecord.getDirection().substring(0,2), getAppSession().getLangs());
+        mLangTo=Utils.getLangByCode(mCurRecord.getDirection().substring(3,5), getAppSession().getLangs());
 
-        Singletone.getInstance().setLastLangFrom(mLangFrom.getCode());
-        Singletone.getInstance().setLastLangTo(mLangTo.getCode());
-        Singletone.getInstance().saveSettings();
+        getAppSession().setLastLangFrom(mLangFrom.getCode());
+        getAppSession().setLastLangTo(mLangTo.getCode());
+        getAppSession().saveSettings();
 
         showLangs();
 
@@ -962,4 +972,12 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
     }
 
 
+    public void keyboardClosed() {
+        if (mCurText.length()>0) {
+
+            makeFinalCall();
+            getViewState().hideSoftKeyboard();
+            getViewState().clearTextFocus();
+        }
+    }
 }

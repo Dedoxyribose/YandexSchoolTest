@@ -18,10 +18,9 @@ import retrofit2.Response;
 import ru.dedoxyribose.yandexschooltest.R;
 import ru.dedoxyribose.yandexschooltest.model.entity.Lang;
 import ru.dedoxyribose.yandexschooltest.model.entity.SupportedLangs;
-import ru.dedoxyribose.yandexschooltest.ui.main.MainView;
 import ru.dedoxyribose.yandexschooltest.ui.standard.StandardMvpPresenter;
+import ru.dedoxyribose.yandexschooltest.util.AppSession;
 import ru.dedoxyribose.yandexschooltest.util.RetrofitHelper;
-import ru.dedoxyribose.yandexschooltest.util.Singletone;
 import ru.dedoxyribose.yandexschooltest.util.Utils;
 
 /**
@@ -45,9 +44,9 @@ public class StartPresenter extends StandardMvpPresenter<StartView>{
     protected void onFirstViewAttach() {
         super.onFirstViewAttach();
 
-        List<Lang> langs=Singletone.getInstance().getLangs();
+        List<Lang> langs= getAppSession().getLangs();
 
-        if (langs.size()==0){
+        if (langs.size()==0 || !getAppSession().getLocale().equals(Locale.getDefault().getLanguage())){
             refreshLangs();
         }
         else {
@@ -59,29 +58,32 @@ public class StartPresenter extends StandardMvpPresenter<StartView>{
                 }
             });
 
-            Singletone.getInstance().setLangs(langs);
+            getAppSession().setLangs(langs);
             getViewState().proceedToMain();
         }
     }
 
-    private void refreshLangs() {
-
-        String ui="ru";
-        if (!Locale.getDefault().getLanguage().equals("ru")) ui="en";
+    private void loadLangsForLocale(final String ui) {
 
         getViewState().showLoading(true);
         getViewState().showError(false, null);
-        RetrofitHelper.getServerApi().getLangs(getContext().getString(R.string.trans_key), ui).enqueue(new Callback<SupportedLangs>() {
+        getServerApi().getLangs(getContext().getString(R.string.trans_key), ui).enqueue(new Callback<SupportedLangs>() {
             @Override
             public void onResponse(Call<SupportedLangs> call, Response<SupportedLangs> response) {
                 if (response.isSuccessful()){
 
                     List<Lang> langs=new ArrayList<>();
 
+                    if (response.body().getLangs()==null || response.body().getLangs().size()==0) {
+                        loadLangsForLocale("en");
+                        return;
+                    }
+
                     for (Lang lang: response.body().getLangs()) {
                         langs.add(lang);
                     }
 
+                    getDaoSession().getLangDao().deleteAll();
                     getDaoSession().getLangDao().insertOrReplaceInTx(langs);
 
                     Collections.sort(langs, new Comparator<Lang>() {
@@ -91,7 +93,11 @@ public class StartPresenter extends StandardMvpPresenter<StartView>{
                         }
                     });
 
-                    Singletone.getInstance().setLangs(langs);
+                    getAppSession().setLangs(langs);
+
+                    getAppSession().setLocale(ui);
+                    getAppSession().saveSettings();
+
                     getViewState().proceedToMain();
                 }
                 else {
@@ -111,6 +117,14 @@ public class StartPresenter extends StandardMvpPresenter<StartView>{
                 else getViewState().showError(true, getContext().getString(R.string.UnknownError));
             }
         });
+
+    }
+
+    private void refreshLangs() {
+
+        String ui=Locale.getDefault().getLanguage();
+
+        loadLangsForLocale(ui);
 
     }
 }

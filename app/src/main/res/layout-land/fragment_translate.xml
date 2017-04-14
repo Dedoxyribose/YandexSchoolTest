@@ -128,7 +128,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1">
 
-            <ru.dedoxyribose.yandexschooltest.widget.EditTextMultilineDone
+            <ru.dedoxyribose.yandexschooltest.widget.SpecialEditText
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:inputType="textMultiLine"
@@ -240,6 +240,7 @@
                 android:layout_marginTop="-5dp"></android.support.v7.widget.RecyclerView>
 
             <RelativeLayout
+                android:clickable="true"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_marginLeft="10dp"

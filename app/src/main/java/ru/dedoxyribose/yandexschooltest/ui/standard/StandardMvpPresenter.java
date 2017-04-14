@@ -5,8 +5,10 @@ import android.content.res.Resources;
 
 import com.arellomobile.mvp.MvpPresenter;
 
-import ru.dedoxyribose.yandexschooltest.util.Singletone;
+import ru.dedoxyribose.yandexschooltest.YandexSchoolTestApplication;
+import ru.dedoxyribose.yandexschooltest.util.AppSession;
 import ru.dedoxyribose.yandexschooltest.model.entity.DaoSession;
+import ru.dedoxyribose.yandexschooltest.util.ServerApi;
 import ru.dedoxyribose.yandexschooltest.util.Utils;
 
 
@@ -17,25 +19,35 @@ public class StandardMvpPresenter<MvpView extends com.arellomobile.mvp.MvpView> 
 
     protected static String APP_TAG= Utils.getAppTag();
     protected String TAG;
-    private DaoSession mDaoSession;
+    private AppSession mAppSession;
+    private ServerApi mServerApi;
 
     public StandardMvpPresenter() {
         TAG=this.toString();
-        mDaoSession= Singletone.getDaoSession();
+        mAppSession = YandexSchoolTestApplication.getAppSessionComponent().getAppSession();
+        mServerApi = YandexSchoolTestApplication.getAppSessionComponent().getServerApi();
     }
 
     protected Resources getResources()
     {
-        return Singletone.getInstance().getContext().getResources();
+        return mAppSession.getContext().getResources();
     }
 
     protected Context getContext()
     {
-        return Singletone.getInstance().getContext();
+        return mAppSession.getContext();
     }
 
     protected DaoSession getDaoSession()
     {
-        return mDaoSession;
+        return mAppSession.getDaoSession();
+    }
+
+    protected AppSession getAppSession() {
+        return mAppSession;
+    }
+
+    protected ServerApi getServerApi() {
+        return mServerApi;
     }
 }

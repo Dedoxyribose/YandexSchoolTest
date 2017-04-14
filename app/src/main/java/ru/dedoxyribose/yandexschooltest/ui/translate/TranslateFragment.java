@@ -50,6 +50,7 @@ import ru.dedoxyribose.yandexschooltest.ui.main.MainActivity;
 import ru.dedoxyribose.yandexschooltest.ui.standard.StandardFragment;
 import ru.dedoxyribose.yandexschooltest.util.Utils;
 import ru.dedoxyribose.yandexschooltest.widget.EditTextMultilineDone;
+import ru.dedoxyribose.yandexschooltest.widget.SpecialEditText;
 import ru.dedoxyribose.yandexschooltest.widget.TintableImageView;
 import ru.yandex.speechkit.Recognizer;
 
@@ -62,7 +63,7 @@ public class TranslateFragment extends StandardFragment implements TranslateView
     @InjectPresenter
     TranslatePresenter mPresenter;
 
-    private EditTextMultilineDone mEtText;
+    private SpecialEditText mEtText;
     private TintableImageView mIvMic, mIvSpeak, mIvSpeakTrsl, mIvShare, mIvBig;
     private ImageView mIvClear, mIvExchange, mIvFavorite;
     private TextView mTvMainText, mTvErrorTitle, mTvErrorText, mTvFrom, mTvTo, mTvDetAut;
@@ -123,7 +124,7 @@ public class TranslateFragment extends StandardFragment implements TranslateView
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        mEtText=(EditTextMultilineDone)view.findViewById(R.id.editText);
+        mEtText=(SpecialEditText)view.findViewById(R.id.editText);
         mIvBig=(TintableImageView) view.findViewById(R.id.ivBig);
         mIvMic=(TintableImageView)view.findViewById(R.id.ivMic);
         mIvSpeak=(TintableImageView)view.findViewById(R.id.ivSpeak);
@@ -185,6 +186,13 @@ public class TranslateFragment extends StandardFragment implements TranslateView
             @Override
             public void afterTextChanged(Editable editable) {
 
+            }
+        });
+
+        mEtText.setOnKeyboardCloseListener(new SpecialEditText.OnKeyboardCloseListener() {
+            @Override
+            public void OnKeyboardClose() {
+                mPresenter.keyboardClosed();
             }
         });
 

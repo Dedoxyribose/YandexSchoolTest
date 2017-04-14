@@ -3,20 +3,12 @@ package ru.dedoxyribose.yandexschooltest.ui.main;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.os.Bundle;
-import android.support.annotation.IdRes;
-import android.support.annotation.NonNull;
-import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.TabLayout;
 import android.support.test.espresso.IdlingResource;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
-import android.support.v7.view.menu.MenuView;
-import android.util.Log;
 import android.util.SparseArray;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
@@ -28,13 +20,10 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import ru.dedoxyribose.yandexschooltest.R;
 import ru.dedoxyribose.yandexschooltest.event.SelectRecordEvent;
-import ru.dedoxyribose.yandexschooltest.model.entity.Record;
 import ru.dedoxyribose.yandexschooltest.ui.histories.HistoriesFragment;
 import ru.dedoxyribose.yandexschooltest.ui.settings.SettingsFragment;
 import ru.dedoxyribose.yandexschooltest.ui.standard.StandardActivity;
 import ru.dedoxyribose.yandexschooltest.ui.translate.TranslateFragment;
-import ru.dedoxyribose.yandexschooltest.util.Singletone;
-import ru.dedoxyribose.yandexschooltest.util.Utils;
 import ru.dedoxyribose.yandexschooltest.widget.NonSwipeableViewPager;
 import ru.yandex.speechkit.SpeechKit;
 

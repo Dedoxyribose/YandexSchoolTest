@@ -9,7 +9,8 @@ import android.view.ViewGroup;
 
 import com.arellomobile.mvp.MvpFragment;
 
-import ru.dedoxyribose.yandexschooltest.util.Singletone;
+import ru.dedoxyribose.yandexschooltest.YandexSchoolTestApplication;
+import ru.dedoxyribose.yandexschooltest.util.AppSession;
 import ru.dedoxyribose.yandexschooltest.model.entity.DaoSession;
 
 /**
@@ -20,7 +21,7 @@ public class StandardFragment extends MvpFragment
 
     protected String TAG="";
 
-    protected DaoSession mDaoSession;
+    private AppSession mAppSession;
 
     @Nullable
     @Override
@@ -33,7 +34,7 @@ public class StandardFragment extends MvpFragment
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        mDaoSession= Singletone.getDaoSession();
+        mAppSession = YandexSchoolTestApplication.getAppSessionComponent().getAppSession();
 
         TAG=this.toString();
         if (TAG.length()>22) TAG=TAG.substring(0, 22);
@@ -59,8 +60,12 @@ public class StandardFragment extends MvpFragment
     }
 
 
+    protected AppSession getAppSession() {
+        return mAppSession;
+    }
+
     protected DaoSession getDaoSession()
     {
-        return mDaoSession;
+        return mAppSession.getDaoSession();
     }
 }

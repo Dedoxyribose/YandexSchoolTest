@@ -17,33 +17,44 @@ public class RetrofitHelper {
 
     public static final String API_URL = DICTIONARY_URL;
 
-    public static Retrofit retrofit;
-    private static ServerApi sServerApi;
+    private Retrofit mRetrofit;
+    private ServerApi mServerApi;
+    FakeInterceptor mFakeInterceptor;
 
-    public static void init() {
+    public RetrofitHelper(boolean mockMode) {
 
-        if (retrofit==null) {
-            Gson gson = Singletone.getGson();
+        Gson gson = AppSession.getGson();
 
-            HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
 
-            logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
 
-            OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
-            httpClient.addInterceptor(logging);
-
-            retrofit=new Retrofit.Builder()
-                    .baseUrl(API_URL)
-                    .addConverterFactory(GsonConverterFactory.create(gson))
-                    .client(httpClient.build())
-                    .build();
-
-            sServerApi = retrofit.create(ServerApi.class);
+        OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
+        httpClient.addInterceptor(logging);
+        if (mockMode) {
+            mFakeInterceptor=new FakeInterceptor();
+            httpClient.addInterceptor(mFakeInterceptor);
         }
+
+        mRetrofit=new Retrofit.Builder()
+                .baseUrl(API_URL)
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .client(httpClient.build())
+                .build();
+
+        mServerApi = mRetrofit.create(ServerApi.class);
+
     }
 
-    public static ServerApi getServerApi() {
-        return sServerApi;
+    public Retrofit getRetrofit() {
+        return mRetrofit;
+
     }
+
+    public ServerApi getServerApi() {
+        return mServerApi;
+    }
+
+    public FakeInterceptor getFakeInterceptor() {return mFakeInterceptor;}
 
 }
