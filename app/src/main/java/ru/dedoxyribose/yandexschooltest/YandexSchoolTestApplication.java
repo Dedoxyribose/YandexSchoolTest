@@ -49,7 +49,7 @@ public class YandexSchoolTestApplication extends Application {
     public static void buildComponent(boolean mockMode, Context context) {
         sAppSessionComponent = DaggerAppSessionComponent.builder()
                 .appSessionModule(new AppSessionModule(context, mockMode))
-                .serverApiModule(new ServerApiModule())
+                .serverApiModule(new ServerApiModule(mockMode))
                 .build();
     }
 

@@ -61,11 +61,10 @@ public class TranslatePresenterTests {
     AppSession appSession;
 
     @Before
-    @PrepareForTest({Log.class, EventBus.class, Context.class})
+    @PrepareForTest({Log.class, EventBus.class})
     public void before() {
 
 
-        PowerMockito.mockStatic(Context.class);
         mockContext= Mockito.mock(MockContext.class);
 
         YandexSchoolTestApplication.buildComponent(true, mockContext);
@@ -91,10 +90,6 @@ public class TranslatePresenterTests {
                 .registerTypeAdapter(SupportedLangs.class, new SupportedLangs.SupportedLangsConverter())
                 .create();*/
 
-
-
-        PowerMockito.mockStatic(RetrofitHelper.class);
-        PowerMockito.mockStatic(AppSession.class);
 
         appSession = YandexSchoolTestApplication.getAppSessionComponent().getAppSession();
         RetrofitHelper retrofitHelper=YandexSchoolTestApplication.getAppSessionComponent().getRetrofitHelper();
@@ -130,7 +125,7 @@ public class TranslatePresenterTests {
     }
 
     @Test
-    @PrepareForTest({RetrofitHelper.class, AppSession.class, Log.class, EventBus.class, Context.class})
+    @PrepareForTest({Log.class, EventBus.class})
     public void sentRequestWithNoConnection_gotConnectionError() {
 
         translatePresenter=new TranslatePresenter();
@@ -149,7 +144,7 @@ public class TranslatePresenterTests {
     }
 
     @Test
-    @PrepareForTest({RetrofitHelper.class, AppSession.class, Log.class, EventBus.class, Context.class})
+    @PrepareForTest({Log.class, EventBus.class})
     public void getResponseBadLangs_gotError() {
 
         translatePresenter=new TranslatePresenter();
@@ -171,7 +166,7 @@ public class TranslatePresenterTests {
     }
 
     @Test
-    @PrepareForTest({RetrofitHelper.class, AppSession.class, Log.class, EventBus.class, Context.class})
+    @PrepareForTest({Log.class, EventBus.class})
     public void getResponseBadKey_gotError() {
 
         translatePresenter=new TranslatePresenter();
