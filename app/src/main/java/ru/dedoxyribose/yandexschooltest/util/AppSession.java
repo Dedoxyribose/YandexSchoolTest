@@ -43,7 +43,6 @@ public class AppSession {
     public AppSession(Context context){
         mContext=context.getApplicationContext();
         configureGreenDao(context);
-        initGson();
         mLangs=getDaoSession().getLangDao().loadAll();
         Collections.sort(mLangs, new Comparator<Lang>() {
             @Override
@@ -54,7 +53,6 @@ public class AppSession {
         loadSettings();
     }
 
-    private static Gson sGson;
 
     public Context getContext() {
         return mContext;
@@ -77,25 +75,6 @@ public class AppSession {
 
     public DaoSession getDaoSession() {
         return mDaoSession;
-    }
-
-
-    //-------------------------Gson
-
-
-    public static void initGson() {
-        sGson= new GsonBuilder()
-                .registerTypeAdapter(Word.class, new Word.WordConverter())
-                .registerTypeAdapter(Def.class, new Def.DefConverter())
-                .registerTypeAdapter(Example.class, new Example.ExampleConverter())
-                .registerTypeAdapter(Record.class, new Record.RecordConverter())
-                .registerTypeAdapter(Translation.class, new Translation.TranslationConverter())
-                .registerTypeAdapter(SupportedLangs.class, new SupportedLangs.SupportedLangsConverter())
-                .create();
-    }
-
-    public static Gson getGson() {
-        return sGson;
     }
 
 

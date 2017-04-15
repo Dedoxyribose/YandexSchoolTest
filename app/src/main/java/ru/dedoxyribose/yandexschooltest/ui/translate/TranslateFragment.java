@@ -5,7 +5,10 @@ import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.support.design.widget.CoordinatorLayout;
+import android.support.design.widget.SwipeDismissBehavior;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
@@ -70,7 +73,7 @@ public class TranslateFragment extends StandardFragment implements TranslateView
     private Button mbRepeat;
     private MaterialProgressBar mPbSpeak, mPbSpeakTrsl;
     private RecyclerView mRvList;
-    private RelativeLayout mRlLoading, mRlError, mRlContainer;
+    private RelativeLayout mRlLoading, mRlError, mRlContainer, mRlSwipeBlock;
     private LinearLayout mLlFrom;
 
     private DefListAdapter mrAdapter;
@@ -146,11 +149,30 @@ public class TranslateFragment extends StandardFragment implements TranslateView
         mRlLoading=(RelativeLayout) view.findViewById(R.id.rlLoading);
         mRlError=(RelativeLayout) view.findViewById(R.id.rlError);
         mRlContainer=(RelativeLayout) view.findViewById(R.id.rlContainer);
+        mRlSwipeBlock = (RelativeLayout) view.findViewById(R.id.rlSwipeBlock);
         mLlFrom=(LinearLayout) view.findViewById(R.id.llFrom);
 
         mrAdapter=new DefListAdapter();
         mRvList.setLayoutManager(new LinearLayoutManager(getActivity()));
         mRvList.setAdapter(mrAdapter);
+
+        final SwipeDismissBehavior<CardView> swipe = new SwipeDismissBehavior();
+        swipe.setSwipeDirection(SwipeDismissBehavior.SWIPE_DIRECTION_ANY);
+        swipe.setStartAlphaSwipeDistance(0.01f);
+        swipe.setEndAlphaSwipeDistance(0.5f);
+        swipe.setListener(new SwipeDismissBehavior.OnDismissListener() {
+            @Override
+            public void onDismiss(View view) {
+                mPresenter.blockSwiped();
+            }
+
+            @Override
+            public void onDragStateChanged(int state) {
+
+            }
+        });
+        ((CoordinatorLayout.LayoutParams)mRlSwipeBlock.getLayoutParams()).setBehavior(swipe);
+
 
 
         mIvClear.setOnClickListener(new View.OnClickListener() {
@@ -428,6 +450,14 @@ public class TranslateFragment extends StandardFragment implements TranslateView
     @Override
     public void decrementIdling() {
         ((MainActivity)getActivity()).decrementIdlingResource();
+    }
+
+    @Override
+    public void resetSwipeBlock() {
+        CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) mRlSwipeBlock.getLayoutParams();
+        params.setMargins(0, 0, 0, 0);
+        mRlSwipeBlock.setLayoutParams(params);
+        mRlSwipeBlock.setAlpha(1.0f);
     }
 
     @Override

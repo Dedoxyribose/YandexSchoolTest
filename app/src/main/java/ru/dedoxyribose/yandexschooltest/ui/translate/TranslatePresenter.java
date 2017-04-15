@@ -211,11 +211,10 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
         mRequestNum++;
         getViewState().showLoading(false);
 
-        if (!getAppSession().isSyncTranslation()) {
-            mCurRecord=null;
-            getViewState().setDefData(new ArrayList<ListItem>());
-            getViewState().setMainText("");
-        }
+        mCurRecord=null;
+        getViewState().setDefData(new ArrayList<ListItem>());
+        getViewState().setMainText("");
+
 
     }
 
@@ -979,5 +978,10 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
             getViewState().hideSoftKeyboard();
             getViewState().clearTextFocus();
         }
+    }
+
+    public void blockSwiped() {
+        getViewState().resetSwipeBlock();
+        clearClicked();
     }
 }

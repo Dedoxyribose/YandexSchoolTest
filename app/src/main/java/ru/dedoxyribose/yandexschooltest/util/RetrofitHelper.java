@@ -30,14 +30,7 @@ public class RetrofitHelper {
 
     public RetrofitHelper(boolean mockMode) {
 
-        Gson gson = new GsonBuilder()
-                .registerTypeAdapter(Word.class, new Word.WordConverter())
-                .registerTypeAdapter(Def.class, new Def.DefConverter())
-                .registerTypeAdapter(Example.class, new Example.ExampleConverter())
-                .registerTypeAdapter(Record.class, new Record.RecordConverter())
-                .registerTypeAdapter(Translation.class, new Translation.TranslationConverter())
-                .registerTypeAdapter(SupportedLangs.class, new SupportedLangs.SupportedLangsConverter())
-                .create();
+        Gson gson = GsonHelper.getGson();
 
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
 

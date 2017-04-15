@@ -40,8 +40,6 @@ public class YandexSchoolTestApplication extends Application {
         else {
             buildComponent(false, getApplicationContext());
             sAppSessionComponent.getAppSession();
-            //Singletone.init(getApplicationContext());
-            //RetrofitHelper.init();
         }
 
     }
@@ -57,7 +55,6 @@ public class YandexSchoolTestApplication extends Application {
     protected void attachBaseContext(Context base) {
         super.attachBaseContext(base);
 
-        // The following line triggers the initialization of ACRA
         ACRA.init(this);
 
     }

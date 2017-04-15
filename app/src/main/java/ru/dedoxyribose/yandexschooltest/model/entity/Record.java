@@ -19,6 +19,7 @@ import java.util.List;
 import org.greenrobot.greendao.annotation.Generated;
 
 import ru.dedoxyribose.yandexschooltest.util.AppSession;
+import ru.dedoxyribose.yandexschooltest.util.GsonHelper;
 
 /**
  * Created by Ryan on 16.03.2017.
@@ -81,7 +82,7 @@ public class Record {
     public Record copy() {
         Record record = new Record(type, id, text, translation, lowText, lowTranslation, direction, jsonDefStr,
                 requestTime, inHistory, inFavorite, historyTime, favoriteTime);
-        record.inflateDefs(AppSession.getGson());
+        record.inflateDefs(GsonHelper.getGson());
         return record;
     }
 

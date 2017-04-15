@@ -13,6 +13,7 @@ import ru.dedoxyribose.yandexschooltest.model.entity.Record;
 import ru.dedoxyribose.yandexschooltest.model.entity.SupportedLangs;
 import ru.dedoxyribose.yandexschooltest.model.entity.Translation;
 import ru.dedoxyribose.yandexschooltest.model.entity.Word;
+import ru.dedoxyribose.yandexschooltest.util.GsonHelper;
 
 import static junit.framework.Assert.assertEquals;
 
@@ -25,14 +26,7 @@ public class GsonTests {
 
     @Before
     public void before() {
-        gson = new GsonBuilder()
-                .registerTypeAdapter(Word.class, new Word.WordConverter())
-                .registerTypeAdapter(Def.class, new Def.DefConverter())
-                .registerTypeAdapter(Example.class, new Example.ExampleConverter())
-                .registerTypeAdapter(Record.class, new Record.RecordConverter())
-                .registerTypeAdapter(Translation.class, new Translation.TranslationConverter())
-                .registerTypeAdapter(SupportedLangs.class, new SupportedLangs.SupportedLangsConverter())
-                .create();
+        gson = GsonHelper.getGson();
     }
 
     @Test

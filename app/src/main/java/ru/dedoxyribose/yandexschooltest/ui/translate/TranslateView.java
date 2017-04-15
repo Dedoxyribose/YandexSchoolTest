@@ -80,4 +80,7 @@ public interface TranslateView extends MvpView {
     @StateStrategyType(OneExecutionStateStrategy.class)
     public void decrementIdling();
 
+    @StateStrategyType(OneExecutionStateStrategy.class)
+    public void resetSwipeBlock();
+
 }

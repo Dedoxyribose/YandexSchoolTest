@@ -46,7 +46,7 @@ public class Utils {
     public static Record deserializeRecord(boolean dict, JSONObject jsonObject, String initialText, String direction) {
         Record record = new Record();
 
-        record= AppSession.getGson().fromJson(jsonObject.toString(), Record.class);
+        record= GsonHelper.getGson().fromJson(jsonObject.toString(), Record.class);
 
         record.setDirection(direction);
         if (!dict) {
