@@ -44,21 +44,16 @@ public class StartPresenter extends StandardMvpPresenter<StartView>{
     protected void onFirstViewAttach() {
         super.onFirstViewAttach();
 
+        //проверяем языки;
+        //если языков нет или поменялась локаль телефона - загружаем языки;
+        //иначе сразу идём в главную активити
+
         List<Lang> langs= getAppSession().getLangs();
 
         if (langs.size()==0 || !getAppSession().getLocale().equals(Locale.getDefault().getLanguage())){
             refreshLangs();
         }
         else {
-
-            Collections.sort(langs, new Comparator<Lang>() {
-                @Override
-                public int compare(Lang lang, Lang t1) {
-                    return lang.getName().compareTo(t1.getName());
-                }
-            });
-
-            getAppSession().setLangs(langs);
             getViewState().proceedToMain();
         }
     }
@@ -74,6 +69,8 @@ public class StartPresenter extends StandardMvpPresenter<StartView>{
 
                     List<Lang> langs=new ArrayList<>();
 
+                    //если языков для данной локали нет - значит она не поддерживается
+                    //в таком случае загружаем языки для локали en и делаем её текущей локалью приложения
                     if (response.body().getLangs()==null || response.body().getLangs().size()==0) {
                         loadLangsForLocale("en");
                         return;
@@ -82,6 +79,8 @@ public class StartPresenter extends StandardMvpPresenter<StartView>{
                     for (Lang lang: response.body().getLangs()) {
                         langs.add(lang);
                     }
+
+                    //сохраняем языки в базу
 
                     getDaoSession().getLangDao().deleteAll();
                     getDaoSession().getLangDao().insertOrReplaceInTx(langs);
@@ -95,7 +94,8 @@ public class StartPresenter extends StandardMvpPresenter<StartView>{
 
                     getAppSession().setLangs(langs);
 
-                    getAppSession().setLocale(ui);
+                    getAppSession().setLocale(Locale.getDefault().getLanguage());
+                    getAppSession().setUsedLocale(ui);
                     getAppSession().saveSettings();
 
                     getViewState().proceedToMain();

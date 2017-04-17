@@ -51,6 +51,9 @@ public class FullscreenActivity extends StandardActivity {
 
         mTvTextScrollable.setText(text);
 
+        //если текст очень длинный, показываем в TextView внутри ScrollView с фиксированным textSize;
+        //иначе оставляем в AutoResizeTextView
+
         final String finalText = text;
         mTvTextScrollable.post(new Runnable() {
             @Override

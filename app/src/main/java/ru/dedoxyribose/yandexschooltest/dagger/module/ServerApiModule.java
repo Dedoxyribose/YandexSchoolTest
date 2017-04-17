@@ -17,6 +17,7 @@ import ru.dedoxyribose.yandexschooltest.util.ServerApi;
  * Created by Ryan on 13.04.2017.
  */
 
+//Возвращает Ретрофит, объект Серверного АПИ
 @Module
 public class ServerApiModule {
 

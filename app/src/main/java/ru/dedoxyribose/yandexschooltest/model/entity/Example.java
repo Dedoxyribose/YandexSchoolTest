@@ -16,6 +16,7 @@ import java.util.List;
 /**
  * Created by Ryan on 16.03.2017.
  */
+//Сущность "пример употребления". Содержит фразу (типа Word) и список переводов
 public class Example {
 
     private Word word;

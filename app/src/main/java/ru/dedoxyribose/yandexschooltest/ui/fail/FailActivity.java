@@ -13,6 +13,7 @@ import ru.dedoxyribose.yandexschooltest.R;
 import ru.dedoxyribose.yandexschooltest.ui.standard.StandardActivity;
 
 
+//активити, показываемая в случае фатальной ошибки, например отсутствия языков в БД
 public class FailActivity extends StandardActivity {
 
     private static final String TAG = "FailActivity";

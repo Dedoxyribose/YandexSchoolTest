@@ -24,32 +24,41 @@ import ru.dedoxyribose.yandexschooltest.util.GsonHelper;
 /**
  * Created by Ryan on 16.03.2017.
  */
+
+//Сущность, представляющая единицу перевода, хранимого в Истории и Избранном
+
 @Entity
 public class Record {
 
+    //типы сущности: слово или фраза; слово отображает словарную статью, фраза - перевод из переводчика
     public static final int TYPE_WORD=0;
     public static final int TYPE_SENTENSE=1;
 
     int type;
 
+    //primary-key, используется комбинация исходного текста и направления перевода
     @Id
     String id;
 
+    //low-версия текста и перевода используется для поиска по истории
     String text, translation;
     String lowText, lowTranslation;
 
     String direction;
 
+    //json со словарной статьёй
     String jsonDefStr;
 
-    long requestTime;
-
+    //есть ли данная запись в истории
     boolean inHistory;
+    //есть ли данная запись в избранном
     boolean inFavorite;
 
+    //время добавления в историю и в избранное - для сортировки
     long historyTime;
     long favoriteTime;
 
+    //список словарных статей
     @Transient
     List<Def> defs;
 
@@ -61,9 +70,9 @@ public class Record {
 
 
 
-    @Generated(hash = 1886451163)
-    public Record(int type, String id, String text, String translation, String lowText, String lowTranslation, String direction,
-            String jsonDefStr, long requestTime, boolean inHistory, boolean inFavorite, long historyTime, long favoriteTime) {
+    @Generated(hash = 2002209643)
+    public Record(int type, String id, String text, String translation, String lowText, String lowTranslation, String direction, String jsonDefStr,
+            boolean inHistory, boolean inFavorite, long historyTime, long favoriteTime) {
         this.type = type;
         this.id = id;
         this.text = text;
@@ -72,16 +81,15 @@ public class Record {
         this.lowTranslation = lowTranslation;
         this.direction = direction;
         this.jsonDefStr = jsonDefStr;
-        this.requestTime = requestTime;
         this.inHistory = inHistory;
         this.inFavorite = inFavorite;
         this.historyTime = historyTime;
         this.favoriteTime = favoriteTime;
     }
 
+
     public Record copy() {
-        Record record = new Record(type, id, text, translation, lowText, lowTranslation, direction, jsonDefStr,
-                requestTime, inHistory, inFavorite, historyTime, favoriteTime);
+        Record record = new Record(type, id, text, translation, lowText, lowTranslation, direction, jsonDefStr, inHistory, inFavorite, historyTime, favoriteTime);
         record.inflateDefs(GsonHelper.getGson());
         return record;
     }
@@ -194,16 +202,8 @@ public class Record {
         return jsonDefStr;
     }
 
-    public long getRequestTime() {
-        return requestTime;
-    }
-
     public List<Def> getDefs() {
         return defs;
-    }
-
-    public void setRequestTime(long requestTime) {
-        this.requestTime = requestTime;
     }
 
     public void setDirection(String direction) {

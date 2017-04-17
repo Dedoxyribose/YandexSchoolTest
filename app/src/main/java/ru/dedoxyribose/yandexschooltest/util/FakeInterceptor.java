@@ -14,6 +14,9 @@ import okhttp3.ResponseBody;
 /**
  * Created by Ryan on 01.02.2017.
  */
+
+//перехватчик, используемый в тестах; задаёт правила, по которым подставляется фейковый ответ на запросы к серверу
+
 public class FakeInterceptor implements Interceptor {
 
 

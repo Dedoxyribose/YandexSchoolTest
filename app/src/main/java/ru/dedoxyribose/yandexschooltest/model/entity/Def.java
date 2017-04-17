@@ -16,6 +16,8 @@ import java.util.List;
 /**
  * Created by Ryan on 16.03.2017.
  */
+
+//Сущность словарная статья. Содержит слово и список переводов
 public class Def {
 
     private Word word;

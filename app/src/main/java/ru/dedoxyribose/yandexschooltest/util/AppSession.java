@@ -27,24 +27,27 @@ import ru.dedoxyribose.yandexschooltest.model.entity.Word;
 /**
  * Created by Ryan on 19.02.2017.
  */
+//Сессия приложения. Хранит основные данные, часто используемые на всех экранах, а также настройки приложения
 public class AppSession {
 
     private static final String TAG = "AppSession";
     private Context mContext;
-    private List<Lang> mLangs;
-    private String mLastLangFrom;
-    private String mLastLangTo;
-    private boolean mSyncTranslation;
-    private boolean mShowDict;
-    private boolean mReturnTranslate;
-    private String mLastText;
-    private String mLocale;
+    private List<Lang> mLangs;  //список языков
+    private String mLastLangFrom;  //последний использованный язык текста
+    private String mLastLangTo;  //последний использованный язык перевода
+    private boolean mSyncTranslation;   //настройка Синхронный перевод
+    private boolean mShowDict;  //настройка Показывать словарь
+    private boolean mReturnTranslate;   //настройка Return для перевода
+    private String mLastText;   //Кэш последнего текста
+    private String mLocale;     //Текущая локаль телефона
+    private String mUsedLocale;    //Текущая локаль, используемая в запросах.
+                                    // Может отличаться от локали телефона, если локаль последнего не поддерживается сервером
 
     public AppSession(Context context){
         mContext=context.getApplicationContext();
         configureGreenDao(context);
         mLangs=getDaoSession().getLangDao().loadAll();
-        Collections.sort(mLangs, new Comparator<Lang>() {
+        Collections.sort(mLangs, new Comparator<Lang>() {       //сортируем языки по имени
             @Override
             public int compare(Lang lang, Lang t1) {
                 return lang.getName().compareTo(t1.getName());
@@ -90,18 +93,21 @@ public class AppSession {
 
     //-------------------------Settings
 
+    //загрузка настроек
     public void loadSettings() {
         Log.d(TAG, "loadSettings");
         SharedPreferences sPref = mContext.getSharedPreferences("settings", Activity.MODE_PRIVATE);
-        mLastLangFrom = sPref.getString("lastLangFrom", "ru");
+        mLastLangFrom = sPref.getString("lastLangFrom", "");
         mLastLangTo = sPref.getString("lastLangTo", "en");
         mSyncTranslation = sPref.getBoolean("syncTranslation", true);
         mShowDict = sPref.getBoolean("showDict", true);
         mReturnTranslate = sPref.getBoolean("returnTranslate", true);
         mLastText = sPref.getString("lastText", "");
         mLocale = sPref.getString("locale", "");
+        mUsedLocale = sPref.getString("usedLocale", "");
     }
 
+    //сохранение настроек
     public void saveSettings() {
         Log.d(TAG, "saveSettings");
 
@@ -114,6 +120,7 @@ public class AppSession {
         ed.putBoolean("returnTranslate", mReturnTranslate);
         ed.putString("lastText", mLastText);
         ed.putString("locale", mLocale);
+        ed.putString("usedLocale", mUsedLocale);
         ed.commit();
     }
 
@@ -175,5 +182,13 @@ public class AppSession {
 
     public void setLocale(String locale) {
         this.mLocale = locale;
+    }
+
+    public String getUsedLocale() {
+        return mUsedLocale;
+    }
+
+    public void setUsedLocale(String usedLocale) {
+        this.mUsedLocale = usedLocale;
     }
 }

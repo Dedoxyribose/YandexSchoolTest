@@ -16,6 +16,7 @@ import java.util.List;
 /**
  * Created by Ryan on 16.03.2017.
  */
+//Сущность перевод. Содержит слово (переведённое), и списки синонимов, их переводов и примеров
 public class Translation {
 
     private Word word;

@@ -22,7 +22,6 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -40,7 +39,6 @@ import ru.dedoxyribose.yandexschooltest.ui.chooselang.ChooseLangActivity;
 import ru.dedoxyribose.yandexschooltest.ui.fullscreen.FullscreenActivity;
 import ru.dedoxyribose.yandexschooltest.ui.standard.StandardMvpPresenter;
 import ru.dedoxyribose.yandexschooltest.util.AppSession;
-import ru.dedoxyribose.yandexschooltest.util.RetrofitHelper;
 import ru.dedoxyribose.yandexschooltest.util.Utils;
 import ru.yandex.speechkit.Error;
 import ru.yandex.speechkit.Recognizer;
@@ -55,7 +53,9 @@ import ru.yandex.speechkit.gui.RecognizerActivity;
 @InjectViewState
 public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
+    //таймаут ожидания перед загрузкой "синхронного перевода"
     public static final long INPUT_TIMEOUT=500;
+    //таймаут неудачного синтеза речи
     private static final long VOCALIZER_TIMEOUT = 20000;
 
     private volatile Record mCurRecord;
@@ -72,15 +72,18 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
     private Record mDictionaryRecord;
     private Record mTranslationRecord;
 
+    //количество сделанных запросов, номер текущего запроса
     private int mRequestNum=0;
 
+    //время, когда пользователь в последний раз менял текст
     private long mLastChangeTextTime=0;
     private Thread mWaiter;
 
     private Lang mLangFrom;
     private Lang mLangTo;
-    private boolean mWasDetermined=false;
+    private boolean mWasDetermined=false; //был ли язык определен автоматически
 
+    //статус синтеза/проигрывания речи
     private boolean mTextSpeechProgress=false;
     private boolean mTranslateSpeechProgress=false;
 
@@ -92,6 +95,8 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
         getViewState().setTranslationButtonsEnabled(false);
 
+
+        //поток, отсматривающий, не пора ли загрузить синхронный перевод
         mWaiter=new Thread(new Runnable() {
             @Override
             public void run() {
@@ -106,10 +111,12 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
                                 @Override
                                 public void run() {
                                     if (mCurRecord==null || mCurRecord.getText()==null || !mCurRecord.getText().equals(mCurText)) {
+
                                         Log.d(APP_TAG, TAG+"mCurRecord="+mCurRecord);
                                         if (mCurRecord!=null) Log.d(APP_TAG, TAG+"mCurRecord.text="+mCurRecord.getText());
                                         if (mCurRecord!=null) Log.d(APP_TAG, TAG+"mCurText="+mCurText);
                                         Log.d(APP_TAG, TAG+"not final call, on timer");
+
                                         makeCall(false);
                                     }
 
@@ -124,20 +131,35 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
         });
         mWaiter.start();
 
+        //загрузка последних использованных языков
+
         mLangFrom=Utils.getLangByCode(getAppSession().getLastLangFrom(), getAppSession().getLangs());
         mLangTo=Utils.getLangByCode(getAppSession().getLastLangTo(), getAppSession().getLangs());
+
+
+        //если какой-то из них пуст, будем подбирать дефолт-варианты
 
         if (mLangTo==null) {
             mLangTo= getAppSession().getLangs().get(0);
         }
 
-        if (mLangFrom==null) mLangFrom=Utils.getLangByCode(mLangTo.getCode().equals("ru")?"en":"ru", getAppSession().getLangs());
+        if (mLangTo==null) {
+            getViewState().toFailActivity();
+            return;
+        }
 
+        if (mLangFrom==null) mLangFrom=Utils.getLangByCode(getAppSession().getLocale(), getAppSession().getLangs());
+
+        if (mLangFrom==null || mLangTo.getCode().equals(mLangFrom.getCode())) mLangFrom=Utils.getLangByCode("en", getAppSession().getLangs());
+
+        //если чё-то совсем не пошло, показваем фатальную ошибку, пускай перезагрузит языки
         if (mLangTo==null || mLangFrom==null || getAppSession().getLangs().size()<3) {
             getViewState().toFailActivity();
             return;
         }
 
+
+        //установить дату запроса последних языков если это первый запуск приложения, чтоб они появились в "недавних"
         if (mLangFrom.getAskedTime()==0) {
             mLangFrom.setAskedTime(System.currentTimeMillis());
             getDaoSession().getLangDao().insertOrReplace(mLangFrom);
@@ -148,8 +170,12 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
             getDaoSession().getLangDao().insertOrReplace(mLangTo);
         }
 
+        //получаем последний текст
         mCurText= getAppSession().getLastText();
         if (!Utils.isEmpty(mCurText)) {
+
+            //если текст не пустой, вставляем его в поле ввода, восстанавливаем перевод из истории (если есть)
+
             getViewState().setText(mCurText);
 
             List<Record> lastRecord=getDaoSession().getRecordDao().queryBuilder().where(RecordDao.Properties.InHistory.eq(true))
@@ -168,6 +194,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
         showLangs();
 
+        //регистрируемся на события
         EventBus.getDefault().register(this);
     }
 
@@ -176,8 +203,6 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
         super.onFirstViewAttach();
 
         Log.d(APP_TAG, TAG+" onFirstViewAttach");
-
-
 
     }
 
@@ -193,9 +218,6 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
         if (mTranslateVocalizer!=null) mTranslateVocalizer.cancel();
 
         EventBus.getDefault().unregister(this);
-
-        getAppSession().setLastText(mCurText);
-        getAppSession().saveSettings();
     }
 
     @Override
@@ -207,6 +229,9 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
     }
 
     public void clearClicked() {
+
+        //очищаем поле, скрываем перевод и кнопки
+
         getViewState().setText("");
         mRequestNum++;
         getViewState().showLoading(false);
@@ -215,10 +240,14 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
         getViewState().setDefData(new ArrayList<ListItem>());
         getViewState().setMainText("");
 
+        getViewState().showClear(false);
+
 
     }
 
     public void textChanged(CharSequence charSequence) {
+
+        //текст изменился; обновляем кнопки
 
         Log.d(APP_TAG, TAG+"textChanged()");
 
@@ -230,12 +259,16 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
         updateSpeechButtonStates();
 
+        getViewState().showClear(mCurText.length()>0);
+
         showLangs();
     }
 
     public void returnPressed() {
 
         Log.d(APP_TAG, TAG+"returnPressed");
+
+        //если включён "Return для перевода" - переводим; иначе - новая строка
 
         if (getAppSession().isReturnTranslate()) {
             if (mCurText.length()>0) {
@@ -256,6 +289,8 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
         Log.d(APP_TAG, TAG+"doMakeCall()");
 
+        //сам запрос делается здесь
+
         setLoading(true);
 
         mCurRecord=null;
@@ -268,6 +303,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
         final boolean noDict=!getAppSession().isShowDict();
 
+        //отменяем старые запросы
         if (mCurDictionaryCall!=null) {
             mCurDictionaryCall.cancel();
             mCurDictionaryCall=null;
@@ -278,10 +314,11 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
             mCurTranslationCall=null;
         }
 
-        String ui="ru";
-        if (!Locale.getDefault().getLanguage().equals("ru")) ui="en";
+        String ui=getAppSession().getUsedLocale();
 
         if (!noDict) {
+
+            //если словарь используется, запрос к словарю
 
             mCurDictionaryCall=getServerApi().lookup(getContext().getString(R.string.dict_key),
                     direction, mCurText, ui);
@@ -300,6 +337,8 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
                         }
                     });
         }
+
+        //запрос к переводчику
 
         mCurTranslationCall=getServerApi().translate(getContext().getString(R.string.trans_key),
                 direction, mCurText);
@@ -324,11 +363,17 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
         Log.d(APP_TAG, TAG+"makeFinalCall()");
 
+        //сделать запрос с дальнейшим сохранением перевода в базу, т.е. юзер дал понять, что набор текста закончен
+
         if (mCurRecord==null || mCurRecord.getText()==null || !mCurRecord.getText().equals(mCurText)
                 || (mCurRecord.getTranslation().trim().toLowerCase().equals(mCurRecord.getText().trim().toLowerCase()))
                 || mWasDetermined)
             makeCall(true);
         else if (mCurRecord!=null && mCurRecord.getText()!=null && mCurRecord.getText().equals(mCurText)) {
+
+            //если перевод данного текста уже получен (синхронным переводом), просто сохраняем его
+            //а также в дальнейшем убираем пометку, что язык нужно определять (если она была вообще)
+
             mWasDetermined=false;
             if (!mLoading) saveCurRecord();
         }
@@ -338,6 +383,8 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
     private void saveCurRecord() {
 
         Log.d(APP_TAG, TAG+"saveCurRecord");
+
+        //сохранить запись в базу; проверяем была ли запись в базе, если была - просто обновляем её время
 
         if (mCurRecord==null) return;
 
@@ -350,6 +397,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
         mCurRecord.setInHistory(true);
         getDaoSession().getRecordDao().insertOrReplace(mCurRecord);
 
+        //уведомляем всех слушателей о новой/измененной записи
         EventBus.getDefault().post(new RecordChangedEvent(mCurRecord, RecordChangedEvent.SENDER_TRANSLATION));
     }
 
@@ -357,6 +405,9 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
         Log.d(APP_TAG, TAG+"makeCall(), mCurText="+mCurText);
 
+        //пора делать запрос
+
+        //если текст пустой, всё прячем
         if (mCurText.length()==0) {
             mCurRecord=null;
             getViewState().setDefData(new ArrayList<ListItem>());
@@ -370,6 +421,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
         mLastChangeTextTime=0;
 
+        //обновляем кол-во сделанных запросов
         mRequestNum++;
 
         mGotDictionaryResponse=false;
@@ -385,11 +437,14 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
             mCurLangCall=null;
         }
 
+        //если не нужно определять язык, вызываем doMakeCall()
         if (!mWasDetermined) {
             doMakeCall(finalCall);
             showLangs();
         }
         else {
+
+            //нужно определить язык
 
             mCurLangCall=getServerApi().detect(getContext().getString(R.string.trans_key), mCurText);
             mCurLangCall.enqueue(
@@ -397,8 +452,11 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
                         @Override
                         public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
 
+                            //если запрос устарел, не обрабатываем
                             if (curReqNum!=mRequestNum) return;
 
+
+                            //обрабатываем ошибку
                             if (!response.isSuccessful()) {
                                 getViewState().showLoading(false);
                                 getViewState().showError(true, getContext().getString(R.string.Error),
@@ -406,6 +464,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
                             }
                             else {
 
+                                //пытаемся получить данный язык, делаем его текущим и вызываем запрос doMakeCall()
                                 try {
                                     JSONObject jsonObject = new JSONObject(response.body().string());
                                     Log.d(APP_TAG, TAG+jsonObject.toString());
@@ -463,9 +522,14 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
                             int errorCode, Record record, String direction, boolean noDict) {
 
         Log.d(APP_TAG, TAG+"gotResponse, successfull="+successful+" errorCode="+errorCode);
+
+        //если запрос устарел, не обрабатываем
         if (reqNum!=mRequestNum) return;
 
 
+        //если запрос не удался (но при этом это не ответ от словаря "у меня нет такого направления перевода")
+        //то выводим ошибку
+        //(если это у словаря нет направления перевода, то ничего страшного, он ещё может оказаться у переводчика)
         if (!successful && !(dictionary && errorCode==501)) {
 
             setLoading(false);
@@ -489,6 +553,8 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
         }
         else {
+
+            //отмечаем, что получен ответ от словаря/переводчика
             if (dictionary) {
                 mGotDictionaryResponse=true;
                 mDictionaryRecord=record;
@@ -498,15 +564,18 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
                 mTranslationRecord=record;
             }
 
+            //если ответы получены уже от обоих, можно обрабатывать
             if ((mGotDictionaryResponse && mGotTranslationResponse) || (mGotTranslationResponse && noDict)) {
 
                 setLoading(false);
 
+                //если словарь не нашёл статей, показываем ответ переводчика
                 if (mDictionaryRecord == null || mDictionaryRecord.getText() == null || mDictionaryRecord.getText().length() < 1) {
                     mCurRecord = mTranslationRecord;
                     mCurRecord.setText(mCurText);
                     getViewState().setMainText(mCurRecord.getTranslation());
-                } else {
+                }
+                else {  //иначе ответ словаря
                     mCurRecord = mDictionaryRecord;
                     mCurRecord.setDirection(direction);
                     getViewState().setMainText(mCurRecord.getTranslation());
@@ -514,6 +583,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
                 getViewState().setDefData(Utils.generateViewModelList(mCurRecord));
                 getViewState().setTranslationButtonsEnabled(!Utils.isEmpty(mCurRecord.getTranslation()));
 
+                //если запрос был "финальный", сохраняем запись в БД и больше не переопределяем язык (если вообще определяли)
                 if (finalCall) {
                     mWasDetermined = false;
                     saveCurRecord();
@@ -528,6 +598,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
     private void setLoading(boolean loading) {
 
         if (loading!=mLoading) {
+            //это для Espresso тестов
             if (loading) getViewState().incrementIdling();
             else getViewState().decrementIdling();
         }
@@ -540,12 +611,17 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
     public void repeatClicked() {
 
         Log.d(APP_TAG, TAG+"repeatClicked");
+
+        //повторить попытку запроса
+
         if (mCurText.length()>0) {
             makeFinalCall();
         }
     }
 
     public void fromClicked() {
+
+        //открываем выбор языка исходного текста
         Intent intent=new Intent(getContext(), ChooseLangActivity.class);
         intent.putExtra(ChooseLangActivity.ARG_LANG_POSITION, ChooseLangActivity.LANG_POSITION_FROM);
         intent.putExtra(ChooseLangActivity.ARG_CUR_LANG, mLangFrom==null?"00":mLangFrom.getCode());
@@ -553,6 +629,8 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
     }
 
     public void toClicked() {
+
+        //открываем выбор языка перевода
         Intent intent=new Intent(getContext(), ChooseLangActivity.class);
         intent.putExtra(ChooseLangActivity.ARG_LANG_POSITION, ChooseLangActivity.LANG_POSITION_TO);
         intent.putExtra(ChooseLangActivity.ARG_CUR_LANG, mLangTo.getCode());
@@ -562,6 +640,8 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
     public void exchangeClicked() {
 
         Log.d(APP_TAG, TAG+"exchangeClicked()");
+
+        //обменять языки
 
         if (mLangFrom==null) return;
 
@@ -575,6 +655,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
         getAppSession().setLastLangTo(mLangTo.getCode());
         getAppSession().saveSettings();
 
+        //обменять исходный текст и перевод
         if (mCurText.length()>0 && mCurRecord!=null && mCurRecord.getTranslation()!=null) {
             setCurText(mCurRecord.getTranslation());
             makeFinalCall();
@@ -582,6 +663,9 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
     }
 
     private void showLangs() {
+
+        //отобразить/обновить языки
+
         String to=mLangTo.getName();
         String from=(mLangFrom==null)?getContext().getString(R.string.DetermineLang):mLangFrom.getName();
         getViewState().showLangs(from, to, mWasDetermined && mLangFrom!=null);
@@ -643,6 +727,8 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
     private void getDefaultLangTo() {
 
+        //если языка перевода нет (при первом запуске, например), ищем возможные варианты
+
         if (mLangFrom==null) mLangTo=Utils.getLangByCode("ru", getAppSession().getLangs());
         else {
             if (mLangFrom.getCode().equals("ru"))  mLangTo=Utils.getLangByCode("en", getAppSession().getLangs());
@@ -660,6 +746,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
     }
 
     public void outsideTouch() {
+        //кликнули мимо EditText, надо сбросить его фокус-покус
         getViewState().hideSoftKeyboard();
         getViewState().clearTextFocus();
     }
@@ -673,12 +760,16 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
     public void synonymClicked(String word) {
 
+        //клик по синониму, меняем языки, выбираем синоним, делаем запрос на перевод
+
         exchangeClicked();
         setCurText(word);
         makeFinalCall();
     }
 
     public void micClicked() {
+
+        //открываем распознаватель речи
 
         if (mLangFrom!=null && Utils.getSpeechCodeForLang(mLangFrom.getCode())!=null) {
 
@@ -693,6 +784,10 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
     }
 
     public AsyncTask makeAsyncTaskForVocalizer(final Vocalizer vocalizer) {
+
+        //создать AsyncTask, отсчитывающий таймаут для синтеза речи
+        //судя по всему иногда vocalizer зависает намертво, будем обрубать его через (VOCALIZER_TIMEOUT мс), если он не сработал
+
         return new AsyncTask() {
             @Override
             protected Object doInBackground(Object[] objects) {
@@ -842,6 +937,8 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
 
     public void bigClicked() {
+
+        //открываем текст fullScreen
         if (mCurRecord!=null && mCurRecord.getTranslation()!=null && mCurRecord.getTranslation().length()>0) {
             Intent intent=new Intent(getContext(), FullscreenActivity.class);
             intent.putExtra(FullscreenActivity.ARG_TEXT, mCurRecord.getTranslation());
@@ -909,8 +1006,13 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
         Log.d(APP_TAG, TAG + "onRecordChangedEvent");
 
+        //события, что какая-то запись обновилась
+
+        //если посылал этот же презентер - не обрабатываем
         if (event.getSender() == RecordChangedEvent.SENDER_TRANSLATION) return;
 
+
+        //иначе обновляем статус избранного для тек. записи
         if (mCurRecord!=null && event.getRecord().getId().equals(mCurRecord.getId())) {
             mCurRecord.setInFavorite(event.getRecord().isInFavorite());
             mCurRecord.setFavoriteTime(event.getRecord().getFavoriteTime());
@@ -924,13 +1026,19 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
         Log.d(APP_TAG, TAG + "onRecordChangedEvent");
 
+        //была выбрана запись в истории/избранном. Отобразим её.
+
+        //копируем запись
+        //нельзя брать ту же ссылку из другого презентера, иначе не получится правильно обновлять данные событиями
+        //(это просто особенность моей реализации)
         mCurRecord=selectRecordEvent.getRecord().copy();
         mCurText=mCurRecord.getText();
         getViewState().setText(mCurRecord.getText());
-        mRequestNum++;
+        mRequestNum++;  //заинвалидейтим текущий запрос (если он был), т.к. у нас тут более свежая запись выбрана
 
         getViewState().showLoading(false);
 
+        //отобразим всё как полагается
         if (mCurRecord.getType()==Record.TYPE_SENTENSE) {
             mTranslationRecord = mCurRecord;
             getViewState().setMainText(mCurRecord.getTranslation());
@@ -943,6 +1051,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
         else getViewState().setDefData(new ArrayList<ListItem>());
         getViewState().setTranslationButtonsEnabled(!Utils.isEmpty(mCurRecord.getTranslation()));
 
+        //укажем языки направления
         mLangFrom=Utils.getLangByCode(mCurRecord.getDirection().substring(0,2), getAppSession().getLangs());
         mLangTo=Utils.getLangByCode(mCurRecord.getDirection().substring(3,5), getAppSession().getLangs());
 
@@ -955,6 +1064,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
         updateSpeechButtonStates();
         updateFavoriteButton();
 
+        //ну и обновим инфу о записи (в т.ч. в истории она переместится вверх)
         saveCurRecord();
 
     }
@@ -962,6 +1072,9 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onFullReloadNeededEvent(FullReloadNeededEvent event) {
+
+        //нужно всё обновить
+        //в данном случае - статутс избранного текущей записи
 
         if (event.getSender()==FullReloadNeededEvent.SENDER_FAVORITE && mCurRecord!=null) {
             mCurRecord.setInFavorite(false);
@@ -981,7 +1094,17 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
     }
 
     public void blockSwiped() {
+
+        //юзер свапнул поле ввода. Нужно очистить его и отрисовать в исходной позиции, "типа это новое"
+
         getViewState().resetSwipeBlock();
         clearClicked();
+    }
+
+    public void paused() {
+
+        //сохраняем текущий текст
+        getAppSession().setLastText(mCurText);
+        getAppSession().saveSettings();
     }
 }

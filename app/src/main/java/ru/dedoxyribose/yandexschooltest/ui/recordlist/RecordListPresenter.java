@@ -31,14 +31,15 @@ import ru.dedoxyribose.yandexschooltest.ui.standard.StandardMvpPresenter;
 @InjectViewState
 public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
 
+    //макс объём БД истории и избранного
     public static final int MAX_CAPACITY=10000;
 
     private List<Record> mRecordList=new ArrayList<>();
 
-    private int mType;
+    private int mType;  //тип фрагмента - история или избранное.
 
     private boolean mIsSearch=false;
-    private boolean mBusy=false;
+    private boolean mBusy=false;  //"занятость фрагмента"; если true, значит выполняется какая-то операция и все события игнорируем
 
     public void setType(int type) {
         mType=type;
@@ -65,6 +66,7 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
     private void loadAll() {
 
 
+        //загружаем асинхронно все записи для избранного или для истории
 
         getViewState().showLoading(true);
         mBusy=true;
@@ -80,6 +82,7 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
 
                 Log.d(APP_TAG, TAG+" loadAll async completed");
 
+                //если запрос устарел, бросаем его
                 if (curReqNum!=mReqNum) return;
 
                 mIsSearch=false;
@@ -88,6 +91,11 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
 
                 List<Record> list=(List<Record>) operation.getResult();
 
+
+                //в случае переполнения истории необходимо создать два списка записей
+                //поскольку записи избранного и истории пересекаются;
+                //если, например, элемент удаляется из истории и не был в избранном, то удаляем его совсем
+                //если элемент был и там и там, то просто сбрасываем один из его флагов
                 List<Record> toChange=new ArrayList<>();
                 List<Record> toDelete=new ArrayList<>();
 
@@ -103,10 +111,15 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
                     }
                 }
 
+                //удаляем и меняем
+
                 getDaoSession().getRecordDao().insertOrReplaceInTx(toChange);
                 getDaoSession().getRecordDao().deleteInTx(toDelete);
 
 
+                //копируем в поле презентера всё, что осталось
+                //при этом переворачиваем список, в целях повышения производительности
+                //(теперь в дальнейшем элементы будут добавляться в конец)
                 for (int i=(list.size()-MAX_CAPACITY>-1)?(list.size()-MAX_CAPACITY):0; i<list.size(); i++) {
                     mRecordList.add(list.get(i));
                 }
@@ -143,16 +156,20 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
 
     public void iconClicked(int i) {
 
+        //кликнули по иконке закладки (избранного, то есть)
+
         Record record = mRecordList.get(i);
 
+        //меняем статус записи на противоположный
         if (!record.isInFavorite()) {
             record.setInFavorite(true);
-            if (record.getFavoriteTime()==0) record.setFavoriteTime(System.currentTimeMillis());
+            record.setFavoriteTime(System.currentTimeMillis());
         }
         else {
             record.setInFavorite(false);
         }
 
+        //обновляем БД
         if (record.isInFavorite() || record.isInHistory())
             getDaoSession().insertOrReplace(record);
         else getDaoSession().delete(record);
@@ -160,6 +177,7 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
         getViewState().setData(mRecordList);
         getViewState().notifyItemChanged(mRecordList.size()-i-1);
 
+        //уведомляем по шине, что запись поменялась;
         EventBus.getDefault().post(new RecordChangedEvent(record,
                 mType==RecordListFragment.TYPE_HISTORY?RecordChangedEvent.SENDER_HISTORY:RecordChangedEvent.SENDER_FAVORITE));
 
@@ -170,27 +188,31 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
 
         Log.d(APP_TAG, TAG+"onRecordChangedEvent");
 
+        //Event о том, что где-то поменяли какую-то запись
+
         if (mBusy) return;
 
         if (mIsSearch) return;
 
+        //если данный фрагмент его и отправлял, то игнорируем
         if ((event.getSender()==RecordChangedEvent.SENDER_HISTORY && mType==RecordListFragment.TYPE_HISTORY) ||
                 (event.getSender()==RecordChangedEvent.SENDER_FAVORITE && mType==RecordListFragment.TYPE_FAVORITE)) return;
 
         boolean found=false;
 
+        //ищем, встречается эта запись в списке записей этого фрагмента
         for (int i = 0; i< mRecordList.size(); i++) {
             Record record= mRecordList.get(i);
 
             if (record.getId().equals(event.getRecord().getId())) {
 
-                Log.d(APP_TAG, "well, found");
-                Log.d(APP_TAG, "record.ht="+record.getHistoryTime());
-                Log.d(APP_TAG, "event.record.ht="+event.getRecord().getHistoryTime());
+                /*Log.d(APP_TAG, "record.ht="+record.getHistoryTime());
+                Log.d(APP_TAG, "event.record.ht="+event.getRecord().getHistoryTime());*/
 
+                //если обновилось время записи в истории, её надо сначала удалить, а потом воткнуть на нужное место; удаляем
                 if (record.getHistoryTime()!=event.getRecord().getHistoryTime() && mType==RecordListFragment.TYPE_HISTORY) {
 
-                    Log.d(APP_TAG, "gonna replace");
+                    /*Log.d(APP_TAG, "gonna replace");*/
 
                     mRecordList.remove(i);
                     getViewState().notifyItemRemoved(mRecordList.size()-i);
@@ -200,6 +222,7 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
 
                 found=true;
 
+                //обновляем данные записи
                 if (mType==RecordListFragment.TYPE_HISTORY) {
                     if (!event.getRecord().isInHistory()) {
                         mRecordList.remove(i);
@@ -228,6 +251,9 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
                 break;
             }
         }
+
+        //если элемент не был найден (либо был удалён из-за устаревания даты), ищем куда его воткнуть;
+        //код дублируется для разных типов фрагмента (избранное/история), т.к. так проще и наглядней
 
         if (!found && event.getRecord().isInFavorite() && mType==RecordListFragment.TYPE_FAVORITE) {
 
@@ -278,11 +304,17 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
 
         Log.d(APP_TAG, TAG+"update()");
 
+        //обновить список
+
+        //если был поиск, убираем его
         if (mIsSearch) {
             loadAll();
             getViewState().clearSearchText();
             return;
         }
+
+        //обновить, удалить элементы, которых уже не должно быть в списке
+        //например элементы избранного, у которых уже сняли "закладку" вручную
 
         if (mType==RecordListFragment.TYPE_HISTORY) return;
 
@@ -301,17 +333,22 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
     }
 
     public void singleClick(int i) {
+        //клик по записи, уведомляем главный экран, что нужно перейти к данной записи
         EventBus.getDefault().post(new SelectRecordEvent(mRecordList.get(i)));
     }
 
     public void longClick(int num) {
-
+        //длинный клик, показываем диалог с единственной опцией "Удалить"
         getViewState().showOptionsDialog(num);
     }
 
     private void removeItem(int i) {
 
         Log.d(APP_TAG, "removeItem " + i);
+
+        //удалить элемент и запись из БД.
+        //либо удаляем полностью, либо сбрасываем один из флагов, если запись ещё нужна в
+        //соседнем фрагменте (т.к. одна запись используется и для истории и для избранного)
 
         Record record=mRecordList.get(i);
         mRecordList.remove(i);
@@ -346,6 +383,8 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
 
         Log.d(APP_TAG, "clearFirstStep start");
 
+        //тут получаем асинхронно все записи, которые находятся ТОЛЬКО в избранном или ТОЛЬКО в истории (в зависимости от типа фрагмента)
+
         AsyncSession asyncSession = getDaoSession().startAsyncSession();
 
         asyncSession.setListenerMainThread(new AsyncOperationListener() {
@@ -367,6 +406,8 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
                     }
                 });
 
+                //удаляем их
+
                 asyncSession2.deleteInTx(Record.class, (List<Record>) operation.getResult());
 
             }
@@ -382,11 +423,15 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
 
         AsyncSession asyncSession = getDaoSession().startAsyncSession();
 
+        //тут получаем остальные записи для текущего типа (т.е. те, которые и в избранном и в истории)
+
         asyncSession.setListenerMainThread(new AsyncOperationListener() {
             @Override
             public void onAsyncOperationCompleted(AsyncOperation operation) {
 
                 List<Record> records = (List<Record>) operation.getResult();
+
+                //и сбрасываем у них один из флагов (флаг избранного или флаг истории)
 
                 if (mType==RecordListFragment.TYPE_FAVORITE) {
                     for (Record record : records) {
@@ -407,6 +452,8 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
                     @Override
                     public void onAsyncOperationCompleted(AsyncOperation operation) {
 
+                        //завершаем процесс очистки
+
                         mBusy=false;
                         getViewState().showLoading(false);
                         getViewState().showEmpty(true);
@@ -415,6 +462,7 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
                         getViewState().setData(mRecordList);
                         getViewState().notifyDataSetChanged();
 
+                        //уведомляем слушателей, что все данные надо обновить
                         EventBus.getDefault().post(new FullReloadNeededEvent(
                                 mType==RecordListFragment.TYPE_HISTORY?RecordChangedEvent.SENDER_HISTORY
                                         :RecordChangedEvent.SENDER_FAVORITE));
@@ -424,6 +472,7 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
                     }
                 });
 
+                //обновляем БД
                 asyncSession2.insertOrReplaceInTx(Record.class, records);
 
             }
@@ -438,6 +487,8 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
         if (mBusy) return;
 
         mBusy=true;
+
+        //кликнули на очистку. Очистка выполняется в несколько этапов (clearFirstStep, clearSecondStep)
 
         getViewState().showLoading(true);
 
@@ -480,6 +531,8 @@ public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
     }
 
     private void searchFor(String text) {
+
+        //поиск
 
         getViewState().showLoading(true);
         mBusy=true;

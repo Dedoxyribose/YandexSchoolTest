@@ -8,6 +8,7 @@ import org.greenrobot.greendao.annotation.Generated;
  * Created by Ryan on 17.03.2017.
  */
 @Entity
+//Сущность язык. Содержит код, имя и время последнего обращения к данному языку
 public class Lang {
     @Id
     private String code;

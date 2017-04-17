@@ -38,6 +38,7 @@ public class RetrofitHelper {
 
         OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
 
+        //если мок-режим, то добавляем перехватчик, возвращающий заранее подготовленные ответы
         if (mockMode) {
             mFakeInterceptor=new FakeInterceptor();
             httpClient.addInterceptor(mFakeInterceptor);

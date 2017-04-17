@@ -27,6 +27,9 @@ public interface TranslateView extends MvpView {
     public void showLoading(boolean show);
 
     @StateStrategyType(AddToEndSingleStrategy.class)
+    public void showClear(boolean show);
+
+    @StateStrategyType(AddToEndSingleStrategy.class)
     public void setMainText(String text);
 
     @StateStrategyType(AddToEndSingleStrategy.class)

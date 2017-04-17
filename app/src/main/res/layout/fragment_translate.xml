@@ -235,7 +235,8 @@
                 android:text=""
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textColor="@color/colorBlackText"
-                android:textSize="20sp" />
+                android:textSize="20sp"
+                android:visibility="invisible"/>
         </ScrollView>
 
         <android.support.v7.widget.RecyclerView

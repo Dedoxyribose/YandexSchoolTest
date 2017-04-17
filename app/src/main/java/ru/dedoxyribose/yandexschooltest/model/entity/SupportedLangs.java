@@ -18,6 +18,9 @@ import java.util.List;
 /**
  * Created by Ryan on 17.03.2017.
  */
+
+//Сущность для распарса списка поддерживаемых языков, возвращаемых API
+
 public class SupportedLangs {
     private List<Lang> langs = new ArrayList<>();
 

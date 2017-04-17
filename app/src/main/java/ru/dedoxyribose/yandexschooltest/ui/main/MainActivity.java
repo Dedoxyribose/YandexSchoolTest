@@ -61,6 +61,8 @@ public class MainActivity extends StandardActivity implements MainView {
             @Override
             public void onPageSelected(int position) {
                 if (position!=1) {
+                    //если средняя вкладка потеряла видимость, отправить сигнал, чтоб текущий фрагмент в ней обновил своё состояние
+                    //(это касается удаления с экрана элементов избранного, с которых сняли "закладку слева")
                     if (mSectionPagerAdapter.getRegisteredFragment(1)!=null) {
                         ((HistoriesFragment)mSectionPagerAdapter.getRegisteredFragment(1)).focusLost();
                     }
@@ -176,6 +178,8 @@ public class MainActivity extends StandardActivity implements MainView {
         super.onPause();
         EventBus.getDefault().unregister(this);
     }
+
+    //обработка CountingIdlingResource, для тестов
 
     public void incrementIdlingResource() {
         mPresenter.incrementIdlingResource();

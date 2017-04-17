@@ -56,6 +56,8 @@ public class Utils {
         return record;
     }
 
+    //функция, конвертирующая словарную статью в формате List<Def> в модель представления -
+    //линейный список объектов, наследующих model.viewmodel.ListItem
     public static List<ListItem> generateViewModelList(Record record) {
 
         ArrayList<ListItem> list = new ArrayList<>();
@@ -111,6 +113,7 @@ public class Utils {
 
     }
 
+    //добавляем спан-цвет к тексту
     public static String getColoredSpanned(String text, String color) {
         String input = "<font color='" + color + "'>" + text + "</font>";
         return input;
@@ -137,6 +140,7 @@ public class Utils {
         else return context.getString(res);
     }*/
 
+    //извлечь код ошибки из body из Response
     public static int extractErrorCode(Response response) {
         if (response.isSuccessful()) return 200;
         else{
@@ -156,6 +160,7 @@ public class Utils {
         }
     }
 
+    //получить нужный текст ошибки для кода ошибки
     public static String getErrorTextForCode(Context context, int errorCode) {
 
         switch (errorCode){
@@ -190,19 +195,6 @@ public class Utils {
                 return speakableLangsCodes[i];
         }
         return null;
-    }
-
-
-    public static int calculateTextViewHeight(Context context, CharSequence text, int textSize, int deviceWidth, Typeface typeface, int padding) {
-        TextView textView = new TextView(context);
-        textView.setPadding(padding,0,padding,padding);
-        textView.setTypeface(typeface);
-        textView.setText(text, TextView.BufferType.SPANNABLE);
-        textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, textSize);
-        int widthMeasureSpec = View.MeasureSpec.makeMeasureSpec(deviceWidth, View.MeasureSpec.AT_MOST);
-        int heightMeasureSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
-        textView.measure(widthMeasureSpec, heightMeasureSpec);
-        return textView.getMeasuredHeight();
     }
 
     public static int dpToPx(int dp) {

@@ -33,6 +33,7 @@ public class YandexSchoolTestApplication extends Application {
         super.onCreate();
 
         Log.d(APP_TAG, "Application start");
+
         if (ACRA.isACRASenderServiceProcess()) {
 
             Log.d(APP_TAG, "isACRA");

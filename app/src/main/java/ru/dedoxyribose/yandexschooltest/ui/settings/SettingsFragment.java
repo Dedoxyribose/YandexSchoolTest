@@ -113,6 +113,10 @@ public class SettingsFragment extends StandardFragment  {
             }
         });
 
+        /*
+
+        код, использовавшийся для тестирования переполнения истории
+
         mTvTest.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -134,7 +138,7 @@ public class SettingsFragment extends StandardFragment  {
                 getDaoSession().getRecordDao().insertInTx(list);
 
             }
-        });
+        });*/
 
     }
 

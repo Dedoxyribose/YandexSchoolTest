@@ -24,6 +24,7 @@ import ru.dedoxyribose.yandexschooltest.ui.recordlist.RecordListView;
 import ru.dedoxyribose.yandexschooltest.ui.standard.StandardFragment;
 
 
+//фрагмент второй вкладки главной активити, контейнер для фрагментов с историей и избранным
 public class HistoriesFragment extends StandardFragment  {
 
     private TabLayout mTabLayout;
@@ -94,10 +95,13 @@ public class HistoriesFragment extends StandardFragment  {
 
                 int i=(position==0)?1:0;
 
+                //когда RecordListFragment теряет фокус (уходит с экрана), посылаем ему сигнал,
+                //что ему можно обновить свои данные и удалить лишние элементы (касается избранного)
                 if (mPagerAdapter.getRegisteredFragment(i)!=null) {
                     ((RecordListFragment)mPagerAdapter.getRegisteredFragment(i)).update();
                 }
 
+                //обновить видимость кнопки Очистка
                 updateClearButtonState();
             }
 

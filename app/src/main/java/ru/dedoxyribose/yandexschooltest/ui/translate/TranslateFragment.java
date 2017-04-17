@@ -336,6 +336,13 @@ public class TranslateFragment extends StandardFragment implements TranslateView
     }
 
     @Override
+    public void onPause() {
+        super.onPause();
+
+        mPresenter.paused();
+    }
+
+    @Override
     public void hideSoftKeyboard() {
         InputMethodManager inputMethodManager =
                 (InputMethodManager) getActivity().getSystemService(
@@ -476,6 +483,11 @@ public class TranslateFragment extends StandardFragment implements TranslateView
     @Override
     public void showLoading(boolean show) {
         mRlLoading.setVisibility(show?View.VISIBLE:View.GONE);
+    }
+
+    @Override
+    public void showClear(boolean show) {
+        mIvClear.setVisibility(show?View.VISIBLE:View.INVISIBLE);
     }
 
     @Override

@@ -14,6 +14,7 @@ import ru.dedoxyribose.yandexschooltest.util.AppSession;
  * Created by Ryan on 13.04.2017.
  */
 
+//Возвращает AppSession или его мок-объект, если включён режим мок-тестирования
 @Module
 public class AppSessionModule {
 
