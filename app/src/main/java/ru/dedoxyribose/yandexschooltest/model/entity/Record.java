@@ -212,7 +212,7 @@ public class Record {
     }
 
     public void setText(String text) {
-        this.text = text;
+        this.text = text.trim();
         this.lowText=text.toLowerCase();
         generateId();
     }

@@ -9,8 +9,8 @@ android {
         applicationId "ru.dedoxyribose.yandexschooltest"
         minSdkVersion 17
         targetSdkVersion 25
-        versionCode 3
-        versionName "0.85"
+        versionCode 4
+        versionName "0.9"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {

@@ -28,8 +28,10 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ru.dedoxyribose.yandexschooltest.R;
+import ru.dedoxyribose.yandexschooltest.event.DictionaryShowEvent;
 import ru.dedoxyribose.yandexschooltest.event.FullReloadNeededEvent;
 import ru.dedoxyribose.yandexschooltest.event.RecordChangedEvent;
+import ru.dedoxyribose.yandexschooltest.event.ReturnToTranslateEvent;
 import ru.dedoxyribose.yandexschooltest.event.SelectRecordEvent;
 import ru.dedoxyribose.yandexschooltest.model.entity.Lang;
 import ru.dedoxyribose.yandexschooltest.model.entity.Record;
@@ -110,7 +112,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
                             new Handler(Looper.getMainLooper()).post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    if (mCurRecord==null || mCurRecord.getText()==null || !mCurRecord.getText().equals(mCurText)) {
+                                    if (mCurRecord==null || mCurRecord.getText()==null || !mCurRecord.getText().trim().equals(mCurText.trim())) {
 
                                         Log.d(APP_TAG, TAG+"mCurRecord="+mCurRecord);
                                         if (mCurRecord!=null) Log.d(APP_TAG, TAG+"mCurRecord.text="+mCurRecord.getText());
@@ -151,6 +153,8 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
         if (mLangFrom==null) mLangFrom=Utils.getLangByCode(getAppSession().getLocale(), getAppSession().getLangs());
 
         if (mLangFrom==null || mLangTo.getCode().equals(mLangFrom.getCode())) mLangFrom=Utils.getLangByCode("en", getAppSession().getLangs());
+
+        if (mLangFrom==null || mLangTo.getCode().equals(mLangFrom.getCode())) mLangFrom=Utils.getLangByCode("fr", getAppSession().getLangs());
 
         //если чё-то совсем не пошло, показваем фатальную ошибку, пускай перезагрузит языки
         if (mLangTo==null || mLangFrom==null || getAppSession().getLangs().size()<3) {
@@ -193,6 +197,8 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
         }
 
         showLangs();
+
+        getViewState().setReturnToTranslate(getAppSession().isReturnTranslate());
 
         //регистрируемся на события
         EventBus.getDefault().register(this);
@@ -1106,5 +1112,24 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
         //сохраняем текущий текст
         getAppSession().setLastText(mCurText);
         getAppSession().saveSettings();
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onDictionaryShowEvent(DictionaryShowEvent event) {
+
+        if (!getAppSession().isShowDict()) {
+            getViewState().setDefData(new ArrayList<ListItem>());
+        }
+        else {
+            makeFinalCall();
+        }
+
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onReturnToTranslateEvent(ReturnToTranslateEvent event) {
+
+        getViewState().setReturnToTranslate(getAppSession().isReturnTranslate());
+
     }
 }

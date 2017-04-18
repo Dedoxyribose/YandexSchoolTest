@@ -14,8 +14,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.arellomobile.mvp.presenter.InjectPresenter;
+
+import org.w3c.dom.Text;
 
 import ru.dedoxyribose.yandexschooltest.R;
 import ru.dedoxyribose.yandexschooltest.ui.recordlist.RecordListFragment;
@@ -103,6 +106,12 @@ public class HistoriesFragment extends StandardFragment  {
 
                 //обновить видимость кнопки Очистка
                 updateClearButtonState();
+
+                for (int j = 0; j < mTabLayout.getTabCount(); j++) {
+                    TabLayout.Tab tab = mTabLayout.getTabAt(j);
+                    ((TextView)tab.getCustomView()).setTextColor(ContextCompat.getColor(getActivity(),
+                            j==position?R.color.colorBlackText:R.color.colorDarkGray));
+                }
             }
 
             @Override
@@ -115,6 +124,11 @@ public class HistoriesFragment extends StandardFragment  {
                 ContextCompat.getColor(getActivity(), R.color.colorBlackText));
 
         mTabLayout.setSelectedTabIndicatorColor(ContextCompat.getColor(getActivity(), R.color.colorBlackText));
+
+        for (int i = 0; i < mTabLayout.getTabCount(); i++) {
+            TabLayout.Tab tab = mTabLayout.getTabAt(i);
+            tab.setCustomView(mPagerAdapter.getTabView(i, i==mViewPager.getCurrentItem()));
+        }
 
         mIvClear.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -210,6 +224,15 @@ public class HistoriesFragment extends StandardFragment  {
             return registeredFragments.get(i);
         }
 
+        public View getTabView(int position, boolean selected) {
+            TextView tv = new TextView(getActivity());
+            tv.setTextSize(16);
+            tv.setText(getPageTitle(position));
+            tv.setSingleLine();
+            tv.setTextColor(ContextCompat.getColor(getActivity(),
+                    selected?R.color.colorBlackText:R.color.colorDarkGray));
+            return tv;
+        }
 
     }
 

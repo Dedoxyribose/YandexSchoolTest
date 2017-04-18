@@ -86,4 +86,7 @@ public interface TranslateView extends MvpView {
     @StateStrategyType(OneExecutionStateStrategy.class)
     public void resetSwipeBlock();
 
+    @StateStrategyType(AddToEndSingleStrategy.class)
+    public void setReturnToTranslate(boolean on);
+
 }

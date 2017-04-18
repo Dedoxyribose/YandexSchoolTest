@@ -332,7 +332,6 @@ public class TranslateFragment extends StandardFragment implements TranslateView
                 mPresenter.favoriteClicked();
             }
         });
-
     }
 
     @Override
@@ -465,6 +464,11 @@ public class TranslateFragment extends StandardFragment implements TranslateView
         params.setMargins(0, 0, 0, 0);
         mRlSwipeBlock.setLayoutParams(params);
         mRlSwipeBlock.setAlpha(1.0f);
+    }
+
+    @Override
+    public void setReturnToTranslate(boolean on) {
+        mEtText.setDoneAction(on);
     }
 
     @Override

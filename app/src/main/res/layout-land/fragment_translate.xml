@@ -147,7 +147,7 @@
                     android:background="#0fff"
                     android:ems="10"
                     android:gravity="top"
-                    android:imeOptions="actionDone"
+                    android:imeOptions="actionDone|flagNoExtractUi"
                     android:inputType="textMultiLine"
                     android:maxLength="9999"
                     android:paddingBottom="30dp"
@@ -207,7 +207,7 @@
                         android:layout_marginTop="10dp"
                         android:src="@drawable/ic_clear_black_24dp"
                         android:tint="#333"
-                        android:visibility="invisible"/>
+                        android:visibility="invisible" />
                 </LinearLayout>
 
             </RelativeLayout>
@@ -239,6 +239,7 @@
                     android:layout_alignStart="@+id/ivClear"
                     android:textColor="@color/colorBlackText"
                     android:layout_marginRight="40dp"
+                    android:layout_marginLeft="10dp"
                     android:textSize="20sp"
                     android:text="" />
             </ScrollView>

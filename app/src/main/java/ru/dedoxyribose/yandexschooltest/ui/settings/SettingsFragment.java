@@ -11,10 +11,14 @@ import android.view.ViewGroup;
 import android.widget.CompoundButton;
 import android.widget.TextView;
 
+import org.greenrobot.eventbus.EventBus;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import ru.dedoxyribose.yandexschooltest.R;
+import ru.dedoxyribose.yandexschooltest.event.DictionaryShowEvent;
+import ru.dedoxyribose.yandexschooltest.event.ReturnToTranslateEvent;
 import ru.dedoxyribose.yandexschooltest.model.entity.Record;
 import ru.dedoxyribose.yandexschooltest.ui.about.AboutActivity;
 import ru.dedoxyribose.yandexschooltest.ui.standard.StandardFragment;
@@ -94,6 +98,7 @@ public class SettingsFragment extends StandardFragment  {
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 getAppSession().setShowDict(b);
                 getAppSession().saveSettings();
+                EventBus.getDefault().post(new DictionaryShowEvent());
             }
         });
 
@@ -102,6 +107,7 @@ public class SettingsFragment extends StandardFragment  {
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 getAppSession().setReturnTranslate(b);
                 getAppSession().saveSettings();
+                EventBus.getDefault().post(new ReturnToTranslateEvent());
             }
         });
 
