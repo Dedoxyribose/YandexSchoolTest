@@ -128,6 +128,7 @@ public class HistoriesFragment extends StandardFragment  {
         for (int i = 0; i < mTabLayout.getTabCount(); i++) {
             TabLayout.Tab tab = mTabLayout.getTabAt(i);
             tab.setCustomView(mPagerAdapter.getTabView(i, i==mViewPager.getCurrentItem()));
+            ((TextView)tab.getCustomView()).getLayoutParams().width= ViewGroup.LayoutParams.WRAP_CONTENT;
         }
 
         mIvClear.setOnClickListener(new View.OnClickListener() {

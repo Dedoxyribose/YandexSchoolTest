@@ -218,8 +218,10 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
         Log.d(APP_TAG, TAG+" onDestroy");
 
+        //выключаем поток waiter
         if (mWaiter!=null && mWaiter.isAlive()) mWaiter.interrupt();
 
+        //останавливаем озвучку
         if (mTextVocalizer!=null) mTextVocalizer.cancel();
         if (mTranslateVocalizer!=null) mTranslateVocalizer.cancel();
 
@@ -243,7 +245,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
         getViewState().showLoading(false);
 
         mCurRecord=null;
-        getViewState().setDefData(new ArrayList<ListItem>());
+        getViewState().setDefData(new ArrayList<ListItem>());   //отправляем пустой массив на отображение в словарь
         getViewState().setMainText("");
 
         getViewState().showClear(false);
