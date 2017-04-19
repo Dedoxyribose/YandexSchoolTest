@@ -8,6 +8,7 @@ import ru.dedoxyribose.yandexschooltest.model.entity.Record;
 
 public class RecordChangedEvent {
 
+    //константы, означающие, кто собсно послал этот event
     public static final int SENDER_TRANSLATION=0, SENDER_FAVORITE=1, SENDER_HISTORY=2;
 
     Record record;

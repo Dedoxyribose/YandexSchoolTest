@@ -5,6 +5,7 @@ package ru.dedoxyribose.yandexschooltest.event;
  */
 public class FullReloadNeededEvent {
 
+    //константы, означающие, кто собсно послал этот event
     public static final int SENDER_TRANSLATION=0, SENDER_FAVORITE=1, SENDER_HISTORY=2;
 
     int sender;
