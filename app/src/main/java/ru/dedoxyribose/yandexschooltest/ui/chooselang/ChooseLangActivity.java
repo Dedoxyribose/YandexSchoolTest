@@ -99,6 +99,7 @@ public class ChooseLangActivity extends StandardActivity implements ChooseLangVi
 
     public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.RecycleViewHolder> {
 
+        //типы элемента: заголовок секции и элемент язык
         final int TYPE_SECTION=0, TYPE_LANG=1;
 
         @Override

@@ -32,17 +32,35 @@ import ru.dedoxyribose.yandexschooltest.model.viewmodel.TrItem;
 /**
  * Created by Ryan on 16.03.2017.
  */
+
+/**
+ * Static-методы и константы, используемые в приложении
+ */
 public class Utils {
 
+    /**
+     * Языки, поддерживаемые речевыми технологиями Яндекса
+     */
     public static String [] speakableLangs = {
             "ru", "en", "uk", "tr"
     };
 
+    /**
+     * Полные коды языков, поддерживаемых речевыми технологиями Яндекса
+     */
     public static String [] speakableLangsCodes = {
             "ru-RU", "en-EN", "uk-UA", "tr-TR",
     };
 
-
+    /**
+     * Преобразовать json-ответ в готовый объект Record.
+     * @param dict к словарю ли был запрос (или к переводчику)
+     * @param jsonObject объект ответа
+     * @param initialText текст, отправленный серверу в кач-ве запроса
+     * @param direction направление перевода
+     * @return готовая запись для сохранения в БД
+     */
+    //не используется в текущей версии приложения
     public static Record deserializeRecord(boolean dict, JSONObject jsonObject, String initialText, String direction) {
         Record record = new Record();
 
@@ -56,8 +74,10 @@ public class Utils {
         return record;
     }
 
-    //функция, конвертирующая словарную статью в формате List<Def> в модель представления -
-    //линейный список объектов, наследующих model.viewmodel.ListItem
+    /**
+     *  Функция, конвертирующая словарную статью в формате List<Def> в модель представления -
+     *  линейный список объектов, наследующих model.viewmodel.ListItem
+     */
     public static List<ListItem> generateViewModelList(Record record) {
 
         ArrayList<ListItem> list = new ArrayList<>();
@@ -113,7 +133,10 @@ public class Utils {
 
     }
 
-    //добавляем спан-цвет к тексту
+    /**
+     * Добавить спан-цвет к тексту
+     */
+
     public static String getColoredSpanned(String text, String color) {
         String input = "<font color='" + color + "'>" + text + "</font>";
         return input;
@@ -140,7 +163,11 @@ public class Utils {
         else return context.getString(res);
     }*/
 
-    //извлечь код ошибки из body из Response
+    /**
+     * извлечь код ошибки из body из Response
+     * @param response ответ сервера
+     * @return код ошибки
+     */
     public static int extractErrorCode(Response response) {
         if (response.isSuccessful()) return 200;
         else{
@@ -160,7 +187,12 @@ public class Utils {
         }
     }
 
-    //получить нужный текст ошибки для кода ошибки
+    /**
+     * Получить нужный текст ошибки для кода ошибки
+     * @param context контекст
+     * @param errorCode код ошибки
+     * @return текст для вывода на экран
+     */
     public static String getErrorTextForCode(Context context, int errorCode) {
 
         switch (errorCode){
@@ -175,6 +207,12 @@ public class Utils {
 
     }
 
+    /**
+     * Получить объект языка из списка языков по его коду
+     * @param code код языка
+     * @param langs список объектов
+     * @return объект языка
+     */
     public static Lang getLangByCode(String code, List<Lang> langs){
         for (Lang lang:langs){
             if (lang.getCode().equals(code))
@@ -183,12 +221,20 @@ public class Utils {
         return null;
     }
 
+    /**
+     * Является ли строка пустой или null
+     */
     public static boolean isEmpty(String text){
         if (text==null) return true;
         if (text.length()==0) return true;
         return false;
     }
 
+    /**
+     * Получить полный код языка для двухсимвольного кода
+     * @param code двухсимвольный код
+     * @return полный код
+     */
     public static String getSpeechCodeForLang(String code) {
         for (int i=0; i<speakableLangs.length; i++) {
             if (speakableLangs[i].equals(code))

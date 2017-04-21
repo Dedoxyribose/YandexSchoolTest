@@ -6,6 +6,9 @@ import ru.dedoxyribose.yandexschooltest.model.entity.Record;
  * Created by Ryan on 21.03.2017.
  */
 
+/**
+ * Event о том, что некая запись в БД поменялась
+ */
 public class RecordChangedEvent {
 
     //константы, означающие, кто собсно послал этот event

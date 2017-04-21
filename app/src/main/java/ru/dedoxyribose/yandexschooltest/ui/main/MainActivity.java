@@ -161,9 +161,11 @@ public class MainActivity extends StandardActivity implements MainView {
         super.onBackPressed();
     }
 
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onSelectRecordEvent(SelectRecordEvent selectRecordEvent) {
 
+        //если пользователь тыкнул в элемент в истории/избр, перекидываем его на главную (первую) вкладку
         mViewPager.setCurrentItem(0);
     }
 

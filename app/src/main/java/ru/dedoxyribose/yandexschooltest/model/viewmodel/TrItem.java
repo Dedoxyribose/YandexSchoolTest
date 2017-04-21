@@ -8,7 +8,10 @@ import ru.dedoxyribose.yandexschooltest.model.entity.Word;
 /**
  * Created by Ryan on 16.03.2017.
  */
-//Элемент перевода. Для вывода в списке словаря на главном экране
+
+/**
+ * Элемент перевода. Для вывода в списке словаря на главном экране
+ */
 public class TrItem  extends ListItem {
 
     String num;

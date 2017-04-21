@@ -31,7 +31,9 @@ import ru.dedoxyribose.yandexschooltest.ui.standard.StandardMvpPresenter;
 @InjectViewState
 public class RecordListPresenter extends StandardMvpPresenter<RecordListView>{
 
-    //макс объём БД истории и избранного
+    /**
+     * Максимальный объём БД истории и избранного
+     */
     public static final int MAX_CAPACITY=10000;
 
     private List<Record> mRecordList=new ArrayList<>();

@@ -16,6 +16,9 @@ import ru.dedoxyribose.yandexschooltest.model.entity.DaoSession;
 /**
  * Created by Ryan on 14.10.2016.
  */
+/**
+ * Базовый фрагмент, получающий реализацию зависимостей на все необходимые ресурсы
+ */
 public class StandardFragment extends MvpFragment
 {
 

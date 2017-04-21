@@ -23,8 +23,8 @@ import ru.dedoxyribose.yandexschooltest.util.AppSession;
 @InjectViewState
 public class ChooseLangPresenter extends StandardMvpPresenter<ChooseLangView>{
 
-    private boolean mIsLangFrom =true;
-    private String mCurLangCode="ru";
+    private boolean mIsLangFrom =true; //язык текста или язык перевода
+    private String mCurLangCode; //текущий язык
 
     private boolean mFirstTime=true;
 
@@ -35,6 +35,7 @@ public class ChooseLangPresenter extends StandardMvpPresenter<ChooseLangView>{
 
         mCurLangCode=intent.getStringExtra(ChooseLangActivity.ARG_CUR_LANG);
 
+        //загружаем данные только если это не пересозданное View, а самое первое.
         if (mFirstTime) {
 
             mFirstTime=false;
@@ -44,6 +45,7 @@ public class ChooseLangPresenter extends StandardMvpPresenter<ChooseLangView>{
             List<Lang> allLangs= getAppSession().getLangs();
             List<Lang> sortedLangs = new ArrayList<>(allLangs);
 
+            //сортируем языки по времени последнего вызова
             Collections.sort(sortedLangs, new Comparator<Lang>() {
                 @Override
                 public int compare(Lang l1, Lang l2) {
@@ -54,12 +56,14 @@ public class ChooseLangPresenter extends StandardMvpPresenter<ChooseLangView>{
 
             List<Lang> recentLangs=new ArrayList<>();
 
+            //и берём 5 последних
             for (int i=0; i<5; i++)
             {
                 if (sortedLangs.get(i).getAskedTime()>0)
                     recentLangs.add(sortedLangs.get(i));
             }
 
+            //обозначаем текущий выбранный язык
             int curLangPos=0;
             for (Lang lang : allLangs){
                 if (lang.getCode().equals(mCurLangCode))
@@ -67,6 +71,7 @@ public class ChooseLangPresenter extends StandardMvpPresenter<ChooseLangView>{
                 curLangPos++;
             }
 
+            //отправляем во View
             getViewState().setData(mIsLangFrom, recentLangs, allLangs, curLangPos);
         }
     }
@@ -86,6 +91,9 @@ public class ChooseLangPresenter extends StandardMvpPresenter<ChooseLangView>{
     }
 
     public void langClicked(Lang lang) {
+
+        //клик по языку, возвращаем ответ в главное активити
+
         String code=(lang==null)?"00":lang.getCode();
         Intent intent=new Intent();
         intent.putExtra(ChooseLangActivity.RES_ARG_CHOSEN_LANG_CODE, code);

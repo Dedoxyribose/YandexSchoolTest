@@ -25,7 +25,9 @@ import ru.dedoxyribose.yandexschooltest.util.GsonHelper;
  * Created by Ryan on 16.03.2017.
  */
 
-//Сущность, представляющая единицу перевода, хранимого в Истории и Избранном
+/**
+ * Сущность, представляющая единицу перевода, хранимого в Истории и Избранном
+ */
 
 @Entity
 public class Record {

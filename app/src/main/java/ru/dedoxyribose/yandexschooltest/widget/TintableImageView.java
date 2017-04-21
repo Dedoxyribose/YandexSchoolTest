@@ -8,6 +8,9 @@ import android.widget.ImageView;
 
 import ru.dedoxyribose.yandexschooltest.R;
 
+/**
+ * ImageView с расширенными возможностями управления tint'ами
+ */
 public class TintableImageView extends ImageView {
 
     private ColorStateList tint;

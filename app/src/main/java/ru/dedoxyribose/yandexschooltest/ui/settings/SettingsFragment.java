@@ -32,6 +32,8 @@ public class SettingsFragment extends StandardFragment  {
     private SwitchCompat msReturn;
 
     private TextView mTvAbout;
+
+    //кнопка использовалась для тестов
     private TextView mTvTest;
 
     public SettingsFragment() {

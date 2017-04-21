@@ -15,6 +15,9 @@ import ru.dedoxyribose.yandexschooltest.util.Utils;
 /**
  * Created by Ryan on 20.02.2017.
  */
+/**
+ * Базовый презентер, получающий реализацию зависимостей на все необходимые ресурсы
+ */
 public class StandardMvpPresenter<MvpView extends com.arellomobile.mvp.MvpView> extends MvpPresenter<MvpView> {
 
     protected static String APP_TAG= Utils.getAppTag();

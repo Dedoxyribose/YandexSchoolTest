@@ -1,77 +1,79 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="80dp"
     android:id="@+id/rlContent"
-    android:background="@drawable/lang_item_back">
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/lang_item_back"
+    android:orientation="vertical">
 
     <ImageView
-        android:layout_width="55dp"
-        android:layout_height="80dp"
         android:id="@+id/ivIcon"
-        android:src="@drawable/ic_bookmark_black_24dp"
+        android:layout_width="55dp"
+        android:layout_height="wrap_content"
         android:layout_centerVertical="true"
-        android:tint="@color/colorAccent"
         android:paddingLeft="15dp"
-        android:paddingRight="15dp" />
+        android:paddingRight="15dp"
+        android:src="@drawable/ic_bookmark_black_24dp"
+        android:tint="@color/colorAccent" />
 
     <LinearLayout
-        android:orientation="vertical"
+        android:id="@+id/llTexts"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_toLeftOf="@+id/tvDir"
         android:layout_centerVertical="true"
-        android:layout_toRightOf="@+id/ivIcon">
+        android:layout_toLeftOf="@+id/tvDir"
+        android:layout_toRightOf="@+id/ivIcon"
+        android:orientation="vertical">
 
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="Medium Text"
             android:id="@+id/tvText"
-            android:textColor="@color/colorBlackText"
-            android:layout_marginLeft="13dp"
-            android:layout_marginTop="13dp"
-            android:layout_marginRight="10dp"
-            android:layout_toLeftOf="@+id/tvDir"
-            android:layout_marginBottom="5dp"
-            android:singleLine="true"
-            android:ellipsize="end" />
-
-        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="Medium Text"
-            android:id="@+id/tvTranslation"
-            android:textColor="#555"
+            android:layout_marginBottom="5dp"
             android:layout_marginLeft="13dp"
             android:layout_marginRight="10dp"
-            android:layout_marginBottom="13dp"
+            android:layout_marginTop="13dp"
             android:layout_toLeftOf="@+id/tvDir"
             android:ellipsize="end"
             android:singleLine="true"
-            android:textSize="16sp"/>
+            android:text="Medium Text"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textColor="@color/colorBlackText" />
+
+        <TextView
+            android:id="@+id/tvTranslation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="13dp"
+            android:layout_marginLeft="13dp"
+            android:layout_marginRight="10dp"
+            android:layout_toLeftOf="@+id/tvDir"
+            android:ellipsize="end"
+            android:singleLine="true"
+            android:text="Medium Text"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textColor="#555"
+            android:textSize="16sp" />
     </LinearLayout>
 
     <TextView
+        android:id="@+id/tvDir"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/tvDir"
-        android:layout_centerVertical="true"
-        android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
         android:layout_marginRight="15dp"
         android:src="@drawable/ic_check_black_24dp"
-        android:visibility="visible"
-        android:text="EN - RU" />
+        android:text="EN - RU"
+        android:visibility="visible" />
 
     <TextView
+        android:id="@+id/textView3"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:id="@+id/textView3"
         android:layout_alignParentBottom="false"
+        android:layout_below="@+id/llTexts"
         android:background="#DDD"
-        android:layout_marginTop="79dp" />
+        android:textAppearance="?android:attr/textAppearanceMedium" />
 </RelativeLayout>

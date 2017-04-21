@@ -14,12 +14,14 @@ import ru.dedoxyribose.yandexschooltest.util.AppSession;
  * Created by Ryan on 13.04.2017.
  */
 
-//Возвращает AppSession или его мок-объект, если включён режим мок-тестирования
+/**
+ *   Возвращает AppSession или его мок-объект, если включён режим мок-тестирования
+ */
 @Module
 public class AppSessionModule {
 
     private Context mContext;
-    private boolean mMockMode;
+    private boolean mMockMode;  //True, если нужно подменять реализацию на мок
 
     public AppSessionModule(Context context, boolean mockMode) {
         this.mContext = context.getApplicationContext();

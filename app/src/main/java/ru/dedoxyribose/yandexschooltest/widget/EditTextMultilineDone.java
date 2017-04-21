@@ -11,6 +11,10 @@ import android.widget.EditText;
 /**
  * Created by Ryan on 17.03.2017.
  */
+
+/**
+ * Нынче не используется, но я сохраню.
+ */
 public class EditTextMultilineDone extends EditText {
     public EditTextMultilineDone(Context context) {
         super(context);

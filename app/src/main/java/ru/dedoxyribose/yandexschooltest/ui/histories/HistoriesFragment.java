@@ -9,6 +9,7 @@ import android.support.v13.app.FragmentPagerAdapter;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.util.SparseArray;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,7 +28,9 @@ import ru.dedoxyribose.yandexschooltest.ui.recordlist.RecordListView;
 import ru.dedoxyribose.yandexschooltest.ui.standard.StandardFragment;
 
 
-//фрагмент второй вкладки главной активити, контейнер для фрагментов с историей и избранным
+/**
+ * фрагмент второй вкладки главной активити, контейнер для фрагментов с историей и избранным
+ */
 public class HistoriesFragment extends StandardFragment  {
 
     private TabLayout mTabLayout;
@@ -107,11 +110,12 @@ public class HistoriesFragment extends StandardFragment  {
                 //обновить видимость кнопки Очистка
                 updateClearButtonState();
 
+                /* старый код
                 for (int j = 0; j < mTabLayout.getTabCount(); j++) {
                     TabLayout.Tab tab = mTabLayout.getTabAt(j);
                     ((TextView)tab.getCustomView()).setTextColor(ContextCompat.getColor(getActivity(),
                             j==position?R.color.colorBlackText:R.color.colorDarkGray));
-                }
+                }*/
             }
 
             @Override
@@ -125,11 +129,23 @@ public class HistoriesFragment extends StandardFragment  {
 
         mTabLayout.setSelectedTabIndicatorColor(ContextCompat.getColor(getActivity(), R.color.colorBlackText));
 
-        for (int i = 0; i < mTabLayout.getTabCount(); i++) {
+
+        //На нексусе 5x обнаружен странный баг в результате которого tablayout с шириной wrap_content обрезает надписи.
+        //Чтобы этого избежать сделаем фиксированную ширину TabLayout, но если размер шрифта увеличен юзером
+        //расширяем tablayout на весь экран
+        //По сути временный workaround.
+        if (TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 100, getActivity().getResources().getDisplayMetrics())-
+                TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 100, getActivity().getResources().getDisplayMetrics())>1) {
+            mTabLayout.getLayoutParams().width= ViewGroup.LayoutParams.MATCH_PARENT;
+        }
+
+
+       /* предыдущий workaround, сохранил на всякий случай
+       for (int i = 0; i < mTabLayout.getTabCount(); i++) {
             TabLayout.Tab tab = mTabLayout.getTabAt(i);
             tab.setCustomView(mPagerAdapter.getTabView(i, i==mViewPager.getCurrentItem()));
             ((TextView)tab.getCustomView()).getLayoutParams().width= ViewGroup.LayoutParams.WRAP_CONTENT;
-        }
+        }*/
 
         mIvClear.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -225,6 +241,7 @@ public class HistoriesFragment extends StandardFragment  {
             return registeredFragments.get(i);
         }
 
+        /* старый код
         public View getTabView(int position, boolean selected) {
             TextView tv = new TextView(getActivity());
             tv.setTextSize(16);
@@ -233,7 +250,7 @@ public class HistoriesFragment extends StandardFragment  {
             tv.setTextColor(ContextCompat.getColor(getActivity(),
                     selected?R.color.colorBlackText:R.color.colorDarkGray));
             return tv;
-        }
+        }*/
 
     }
 

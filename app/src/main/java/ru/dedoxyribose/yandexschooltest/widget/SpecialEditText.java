@@ -11,6 +11,9 @@ import android.widget.EditText;
  * Created by Ryan on 09.04.2017.
  */
 
+/**
+ * EditText, позволяющий сделать ACTION_DONE для multiline, а также регистрируюший событие закрытия клавиатуры
+ */
 public class SpecialEditText extends EditText {
 
     private boolean mIsDoneAction;

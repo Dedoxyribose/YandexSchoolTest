@@ -23,7 +23,6 @@ public class ServerApiModule {
 
     private boolean mMockMode;
 
-
     public ServerApiModule(boolean mockMode) {
         this.mMockMode=mockMode;
     }

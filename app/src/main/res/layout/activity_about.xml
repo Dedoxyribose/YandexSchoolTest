@@ -86,6 +86,6 @@
         android:scaleType="fitCenter"
         android:layout_margin="5dp"
         android:src="@drawable/buglight"
-        android:layout_above="@+id/tvBottom" />
+        android:layout_above="@+id/tvBottom" />z
 
 </RelativeLayout>

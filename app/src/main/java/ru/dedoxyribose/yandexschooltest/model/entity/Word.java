@@ -13,7 +13,10 @@ import java.lang.reflect.Type;
 /**
  * Created by Ryan on 16.03.2017.
  */
-//Сущность слово. Содержит текст, число, часть речи, род и транскрипцию
+
+/**
+ * Сущность Слово. Содержит текст, число, часть речи, род и транскрипцию
+ */
 public class Word {
 
     private String text, num, pos, gen, ts;

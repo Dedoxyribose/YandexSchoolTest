@@ -27,7 +27,10 @@ import ru.dedoxyribose.yandexschooltest.model.entity.Word;
 /**
  * Created by Ryan on 19.02.2017.
  */
-//Сессия приложения. Хранит основные данные, часто используемые на всех экранах, а также настройки приложения
+
+/**
+  * Сессия приложения. Хранит основные данные, часто используемые на всех экранах, а также настройки приложения
+ */
 public class AppSession {
 
     private static final String TAG = "AppSession";
@@ -93,7 +96,11 @@ public class AppSession {
 
     //-------------------------Settings
 
-    //загрузка настроек
+    /**
+     * Загрузить настройки и прочие переменные, к которым необходим быстрый доступ.
+     * Не храним их в БД, т.к они не относятся к какой-либо сущности и удобнее быстро получать их сразу
+     * при старте приложения.
+     */
     public void loadSettings() {
         Log.d(TAG, "loadSettings");
         SharedPreferences sPref = mContext.getSharedPreferences("settings", Activity.MODE_PRIVATE);
@@ -107,7 +114,9 @@ public class AppSession {
         mUsedLocale = sPref.getString("usedLocale", "");
     }
 
-    //сохранение настроек
+    /**
+     * Сохранить настройки и прочие переменные, к которым необходим быстрый доступ.
+     */
     public void saveSettings() {
         Log.d(TAG, "saveSettings");
 

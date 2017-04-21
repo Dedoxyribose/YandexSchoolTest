@@ -14,6 +14,10 @@ import ru.dedoxyribose.yandexschooltest.util.ServerApi;
  * Created by Ryan on 13.04.2017.
  */
 
+//используем Dagger для внедрения экземпляров AppSession, Retrofit, ServerApi
+//будем подменять AppSession на тестировании на mock-объект
+//а в Retrofit будем внедрять перехватчик
+
 @Singleton
 @Component(modules={AppSessionModule.class, ServerApiModule.class})
 public interface AppSessionComponent {

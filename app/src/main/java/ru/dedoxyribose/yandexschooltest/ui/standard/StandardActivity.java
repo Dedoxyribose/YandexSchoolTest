@@ -12,6 +12,10 @@ import ru.dedoxyribose.yandexschooltest.model.entity.DaoSession;
 /**
  * Created by Ryan on 26.08.2016.
  */
+
+/**
+ * Базовое активити, получающее реализацию зависимостей на все необходимые ресурсы
+ */
 public class StandardActivity extends MvpAppCompatActivity {
 
 

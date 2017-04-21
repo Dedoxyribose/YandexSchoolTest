@@ -35,7 +35,6 @@ public class YandexSchoolTestApplication extends Application {
         Log.d(APP_TAG, "Application start");
 
         if (ACRA.isACRASenderServiceProcess()) {
-
             Log.d(APP_TAG, "isACRA");
         }
         else {
@@ -45,6 +44,11 @@ public class YandexSchoolTestApplication extends Application {
 
     }
 
+    /**
+     * создать компонент для даггера
+     * @param mockMode
+     * @param context
+     */
     public static void buildComponent(boolean mockMode, Context context) {
         sAppSessionComponent = DaggerAppSessionComponent.builder()
                 .appSessionModule(new AppSessionModule(context, mockMode))
@@ -60,7 +64,10 @@ public class YandexSchoolTestApplication extends Application {
 
     }
 
-
+    /**
+     * получить компонент даггера
+     * @return
+     */
     public static AppSessionComponent getAppSessionComponent() {
         return sAppSessionComponent;
     }

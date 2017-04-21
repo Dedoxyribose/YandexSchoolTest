@@ -14,6 +14,9 @@ import ru.dedoxyribose.yandexschooltest.model.entity.Word;
  * Created by Ryan on 14.04.2017.
  */
 
+/**
+ * Класс, подготавливающий объект Gson, регистрирующий адаптеры преобразования
+ */
 public class GsonHelper {
 
     private GsonHelper(){}

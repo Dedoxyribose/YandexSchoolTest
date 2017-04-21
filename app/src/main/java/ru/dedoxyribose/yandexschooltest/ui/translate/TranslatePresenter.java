@@ -1123,7 +1123,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
             getViewState().setDefData(new ArrayList<ListItem>());
         }
         else {
-            makeFinalCall();
+            makeCall(true);
         }
 
     }
