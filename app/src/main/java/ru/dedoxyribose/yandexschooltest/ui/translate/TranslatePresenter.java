@@ -60,6 +60,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
     //таймаут неудачного синтеза речи
     private static final long VOCALIZER_TIMEOUT = 20000;
 
+    //текущая запись
     private volatile Record mCurRecord;
     private String mCurText="";
 
@@ -245,8 +246,12 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
         getViewState().showLoading(false);
 
         mCurRecord=null;
-        getViewState().setDefData(new ArrayList<ListItem>());   //отправляем пустой массив на отображение в словарь
-        getViewState().setMainText("");
+        getViewState().setDefData(new ArrayList<ListItem>());//отправляем пустой массив на отображение в словарь
+        getViewState().setMainText(null);
+        updateFavoriteButton();
+        mLastChangeTextTime=0;
+        getViewState().setTranslateSpeechStatus(false, mTranslateSpeechProgress);
+        getViewState().setTranslationButtonsEnabled(false);
 
         getViewState().showClear(false);
 
@@ -373,7 +378,7 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
         //сделать запрос с дальнейшим сохранением перевода в базу, т.е. юзер дал понять, что набор текста закончен
 
-        if (mCurRecord==null || mCurRecord.getText()==null || !mCurRecord.getText().equals(mCurText)
+        if (mCurRecord==null || mCurRecord.getText()==null || !mCurRecord.getText().trim().equals(mCurText.trim())
                 || (mCurRecord.getTranslation().trim().toLowerCase().equals(mCurRecord.getText().trim().toLowerCase()))
                 || mWasDetermined)
             makeCall(true);
@@ -704,7 +709,10 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
                     getDefaultLangTo();
                 }
 
-                getAppSession().setLastLangFrom(data.getStringExtra(ChooseLangActivity.RES_ARG_CHOSEN_LANG_CODE));
+                if (mLangFrom!=null)
+                    getAppSession().setLastLangFrom(mLangFrom.getCode());
+                else getAppSession().setLastLangFrom("00");
+                getAppSession().setLastLangTo(mLangTo.getCode());
                 getAppSession().saveSettings();
 
             }
@@ -717,7 +725,10 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
                     getDaoSession().getLangDao().insertOrReplace(mLangTo);
                 }
 
-                getAppSession().setLastLangTo(data.getStringExtra(ChooseLangActivity.RES_ARG_CHOSEN_LANG_CODE));
+                if (mLangFrom!=null)
+                    getAppSession().setLastLangFrom(mLangFrom.getCode());
+                else getAppSession().setLastLangFrom("00");
+                getAppSession().setLastLangTo(mLangTo.getCode());
                 getAppSession().saveSettings();
 
             }
@@ -1072,6 +1083,9 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
         updateSpeechButtonStates();
         updateFavoriteButton();
 
+        //если нужно показать словарь, но его не было в БД, то делаем запрос
+        if (getAppSession().isShowDict() && (mCurRecord.getDefs()==null || mCurRecord.getDefs().size()==0))
+            makeCall(true);
         //ну и обновим инфу о записи (в т.ч. в истории она переместится вверх)
         saveCurRecord();
 
@@ -1094,7 +1108,6 @@ public class TranslatePresenter extends StandardMvpPresenter<TranslateView>{
 
     public void keyboardClosed() {
         if (mCurText.length()>0) {
-
             makeFinalCall();
             getViewState().hideSoftKeyboard();
             getViewState().clearTextFocus();

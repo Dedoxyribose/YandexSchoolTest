@@ -34,7 +34,7 @@
                 android:visibility="invisible" />
         </ScrollView>
 
-        <com.lb.auto_fit_textview.AutoResizeTextView
+        <ru.dedoxyribose.yandexschooltest.widget.AutoResizeTextView
             android:id="@+id/tvText"
             android:layout_width="match_parent"
             android:layout_height="match_parent"

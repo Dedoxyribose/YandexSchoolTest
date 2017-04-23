@@ -9,8 +9,9 @@
     <ImageView
         android:id="@+id/ivIcon"
         android:layout_width="55dp"
-        android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
+        android:layout_height="match_parent"
+        android:layout_alignBottom="@+id/llTexts"
+        android:layout_alignTop="@+id/llTexts"
         android:paddingLeft="15dp"
         android:paddingRight="15dp"
         android:src="@drawable/ic_bookmark_black_24dp"

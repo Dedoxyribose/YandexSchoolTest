@@ -343,11 +343,14 @@ public class TranslateFragment extends StandardFragment implements TranslateView
 
     @Override
     public void hideSoftKeyboard() {
-        InputMethodManager inputMethodManager =
-                (InputMethodManager) getActivity().getSystemService(
-                        Activity.INPUT_METHOD_SERVICE);
-        inputMethodManager.hideSoftInputFromWindow(
-                getActivity().getCurrentFocus().getWindowToken(), 0);
+        try {
+            InputMethodManager inputMethodManager =
+                    (InputMethodManager) getActivity().getSystemService(
+                            Activity.INPUT_METHOD_SERVICE);
+            inputMethodManager.hideSoftInputFromWindow(
+                    getActivity().getCurrentFocus().getWindowToken(), 0);
+        }
+        catch (Exception e) {}
     }
 
     @Override

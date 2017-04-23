@@ -9,12 +9,12 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.lb.auto_fit_textview.AutoResizeTextView;
 
 import me.grantland.widget.AutofitTextView;
 import ru.dedoxyribose.yandexschooltest.R;
 import ru.dedoxyribose.yandexschooltest.ui.standard.StandardActivity;
 import ru.dedoxyribose.yandexschooltest.util.Utils;
+import ru.dedoxyribose.yandexschooltest.widget.AutoResizeTextView;
 
 
 public class FullscreenActivity extends StandardActivity {

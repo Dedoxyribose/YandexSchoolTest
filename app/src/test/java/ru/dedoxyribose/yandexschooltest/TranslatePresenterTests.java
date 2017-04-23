@@ -128,6 +128,8 @@ public class TranslatePresenterTests {
     @PrepareForTest({Log.class, EventBus.class})
     public void sentRequestWithNoConnection_gotConnectionError() {
 
+        //данный тест проверяет как отреагирует презентер на ошибку NoConnection
+
         translatePresenter=new TranslatePresenter();
         translateView = mock(TranslateView.class);
         translatePresenter.attachView(translateView);
@@ -146,6 +148,8 @@ public class TranslatePresenterTests {
     @Test
     @PrepareForTest({Log.class, EventBus.class})
     public void getResponseBadLangs_gotError() {
+
+        //данный тест проверяет как отреагирует презентер на ошибку 501
 
         translatePresenter=new TranslatePresenter();
         translateView = mock(TranslateView.class);
@@ -168,6 +172,8 @@ public class TranslatePresenterTests {
     @Test
     @PrepareForTest({Log.class, EventBus.class})
     public void getResponseBadKey_gotError() {
+
+        //данный тест проверяет как отреагирует презентер на ошибку 401
 
         translatePresenter=new TranslatePresenter();
         translateView = mock(TranslateView.class);

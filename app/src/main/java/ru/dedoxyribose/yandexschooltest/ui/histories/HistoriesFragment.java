@@ -174,11 +174,17 @@ public class HistoriesFragment extends StandardFragment  {
     }
 
     public void hideSoftKeyboard() {
-        InputMethodManager inputMethodManager =
-                (InputMethodManager) getActivity().getSystemService(
-                        Activity.INPUT_METHOD_SERVICE);
-        inputMethodManager.hideSoftInputFromWindow(
-                getActivity().getCurrentFocus().getWindowToken(), 0);
+
+        try {
+            InputMethodManager inputMethodManager =
+                    (InputMethodManager) getActivity().getSystemService(
+                            Activity.INPUT_METHOD_SERVICE);
+            inputMethodManager.hideSoftInputFromWindow(
+                    getActivity().getCurrentFocus().getWindowToken(), 0);
+        }
+        catch (Exception e) {}
+
+
     }
 
 

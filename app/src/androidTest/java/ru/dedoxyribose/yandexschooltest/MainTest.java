@@ -125,6 +125,9 @@ public class MainTest  {
     @Test
     public void checkFavorite() {
 
+        //данный тест проверяет взаимодействие с вкладкой Избранное
+        //добавляем слово в избранное с разных вкладок и проверяем, как оно появляется и исчезает на вкладке Избранное
+
         onView(withId(R.id.tvFrom)).perform(click());
 
         onView(withId(R.id.rvList)).perform(RecyclerViewActions.scrollToHolder(withLangInHolder("Русский")));

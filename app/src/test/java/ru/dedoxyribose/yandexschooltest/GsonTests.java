@@ -32,6 +32,8 @@ public class GsonTests {
     @Test
     public void parseApple_isCorrect() throws Exception {
 
+        //данный тест проверяет, правильно ли парсит Gson ответ словаря
+
         String str="{\"head\":{},\"def\":[{\"text\":\"яблоко\",\"pos\":\"noun\",\"gen\":\"ср\",\"an" +
                 "m\":\"неодуш\",\"tr\":[{\"text\":\"apple\",\"pos\":\"noun\",\"ex\":[{\"text\":\"зел" +
                 "еное яблоко\",\"tr\":[{\"text\":\"green apple\"}]}]}]}]}";
